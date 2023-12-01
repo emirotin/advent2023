@@ -23,7 +23,7 @@ const findDigits = (s: string) => {
 		const m = s.match(digit);
 		if (!m) break;
 		res.push(m[0]);
-		s = s.slice(1);
+		s = s.slice(m.index! + 1);
 	}
 
 	return res;
