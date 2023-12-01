@@ -13,5 +13,9 @@
 		"module": "ESNext",
 		"noEmit": true,
 		"lib": ["es2022"]
+	},
+	"ts-node": {
+		// Tell ts-node CLI to install the --loader automatically, explained below
+		"esm": true
 	}
 }
