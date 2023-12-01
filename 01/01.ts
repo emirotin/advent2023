@@ -15,10 +15,3 @@ const res = sum(
 );
 
 console.log(res);
-
-// console.log(
-// 	lines
-// 		.map((l) => l.trim())
-// 		.filter(Boolean)
-// 		.map((l) => l.split("").filter((c) => c.match(/\d/)))
-// );
