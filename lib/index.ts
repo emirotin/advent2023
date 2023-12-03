@@ -14,3 +14,5 @@ export const readLines = (metaUrl: string, fileName: string) => {
 };
 
 export const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+
+export const uniq = <T>(arr: T[]) => [...new Set(arr)];
