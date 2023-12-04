@@ -1,11 +1,5 @@
 import { readLines, sum } from "../lib/index.js";
-
-const parseNums = (line: string) => line.split(/\s+/).map((n) => parseInt(n));
-
-const parseLine = (line: string) => {
-	const [_, nums] = line.split(": ");
-	return nums!.trim().split(" | ").map(parseNums);
-};
+import { parseLine } from "./lib.js";
 
 const lines = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
