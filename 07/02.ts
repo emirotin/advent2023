@@ -10,10 +10,10 @@ const cardToValue = {
 	8: 8,
 	9: 9,
 	T: 10,
-	J: 0,
 	Q: 12,
 	K: 13,
 	A: 14,
+	J: 0,
 } as const;
 
 const lines = readLines(import.meta.url, "input.txt")
@@ -56,17 +56,11 @@ const rankLine = (ns: number[]) => {
 	if (Math.max(...counts) + jsCount === 3) return 4;
 
 	const twosCount = counts.filter((c) => c === 2).length;
-	const onesCount = counts.filter((c) => c === 1).length;
 
-	// have two pairs or one pair + pair of Js or two distinct cards + at least two JS => can build two pairs
-	if (
-		twosCount === 2 ||
-		(twosCount === 1 && jsCount >= 2) ||
-		(onesCount >= 2 && jsCount >= 2)
-	)
-		return 3;
+	// have two pairs or one pair + at least one J => can make two pairs (or better, which is already covered)
+	if (twosCount === 2 || (twosCount === 1 && jsCount >= 1)) return 3;
 
-	// have one real pair or at least one J to add to some card => pair
+	// have one real pair or at least one J => can make a pair (or better, which is already covered)
 	if (twosCount >= 1 || jsCount >= 1) return 2;
 
 	return 1;
