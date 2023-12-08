@@ -14,12 +14,13 @@ const transitions = parseTransitions(lines.slice(1)).reduce<
 	return acc;
 }, {});
 
-let state = "AAA";
+let states = Object.keys(transitions).filter((s) => s.endsWith("A"));
 let stepsCount = 0;
 
-while (state !== "ZZZ") {
+while (!states.every((s) => s.endsWith("Z"))) {
+	console.log(states);
 	const step = steps[stepsCount % steps.length]!;
-	state = transitions[state]![step]!;
+	states = states.map((state) => transitions[state]![step]!);
 	stepsCount += 1;
 }
 
