@@ -62,10 +62,11 @@ const gcd = (a: number, b: number) => {
 
 const lcm = (a: number, b: number) => (a * b) / gcd(a, b);
 
-// total steps until Z = setup + period * k + zIndex - setup = period * k + zIndex
+// total steps until Z = setup + period * k + (zIndex - setup) = period * k + zIndex
 // it happens that in all cases there's a single Z on the period, and zIndex === period
-// because of that for each initial state total steps to Z is always period * k
-// and the minimal common number of steps is LCM
+// because of that for each initial state the total number of steps to Z
+// is always period * k
+// and thus the minimal common number of steps is LCM of all periods
 
 const periods = initialStates.map(calc).map(({ period }) => period);
 
