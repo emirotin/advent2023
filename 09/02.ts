@@ -6,15 +6,16 @@ const lines = readLines(import.meta.url, "input.txt")
 	.filter(Boolean)
 	.map(parseNums);
 
-const extrapolate = (ns: number[]) => {
+const extrapolateLeft = (ns: number[]) => {
 	const getVal = _getVal(ns);
 
 	let g = 0;
 	let n = ns.length;
 	let result = 0;
-	let last;
-	while ((last = getVal(n - 1, g)) !== 0) {
-		result += last;
+	let mul = 1;
+	while (getVal(n - 1, g) !== 0) {
+		result += getVal(0, g) * mul;
+		mul *= -1;
 		g += 1;
 		n -= 1;
 	}
@@ -22,4 +23,4 @@ const extrapolate = (ns: number[]) => {
 	return result;
 };
 
-console.log(sum(lines.map(extrapolate)));
+console.log(sum(lines.map(extrapolateLeft)));
