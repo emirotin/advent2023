@@ -9,7 +9,7 @@ import {
 	MapChar,
 } from "./lib.js";
 
-const matrix = readLines(import.meta.url, "demo5.txt")
+const matrix = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
 	.filter(Boolean)
 	.map(parseLine);
@@ -64,8 +64,10 @@ const findLoop = (
 	}
 
 	const newMatrix = cloneMatrix(matrix);
+	// replace start symbol with the actual pipe
 	newMatrix[startR]![startC] = startPipe;
 
+	// replace all pipes that are not part of the loop
 	for (let r = 0; r < rows; r++) {
 		for (let c = 0; c < cols; c++) {
 			if (!loopCoords.find((coord) => coord.r === r && coord.c === c)) {
@@ -77,46 +79,54 @@ const findLoop = (
 	return newMatrix as MapChar[][];
 };
 
-const countInnerCells = (matrix: (MapChar | "x" | "I" | "O")[][]) => {
+const countInnerCells = (matrix: (MapChar | "?" | "I" | "O")[][]) => {
 	let count = 0;
 
-	for (let r = 0; r < rows; r++) {
+	for (let r = 0; r < rows * 2; r++) {
 		let isBetweenPipes = 0;
-		for (let c = 0; c < cols; c++) {
-			if (matrix[r]![c] === ".") {
-				matrix[r]![c] = isBetweenPipes ? "x" : "O";
-			} else if (["|", "L", "F", "J", "7"].includes(matrix[r]![c]!)) {
+		for (let c = 0; c < cols * 2; c++) {
+			const sym = matrix[~~(r / 2)]![~~(c / 2)]!;
+
+			if (sym === ".") {
+				matrix[~~(r / 2)]![~~(c / 2)] = isBetweenPipes ? "?" : "O";
+			} else if (
+				(c % 2 === 0 && sym === "|") ||
+				(r % 2 === 1 && c % 2 === 0 && sym === "F") ||
+				(r % 2 === 0 && c % 2 === 0 && sym === "L") ||
+				(r % 2 === 1 && c % 2 === 0 && sym === "7") ||
+				(r % 2 === 0 && c % 2 === 0 && sym === "J")
+			) {
 				isBetweenPipes = 1 - isBetweenPipes;
 			}
 		}
 	}
 
-	for (let c = 0; c < cols; c++) {
+	for (let c = 0; c < cols * 2; c++) {
 		let isBetweenPipes = 0;
-		for (let r = 0; r < rows; r++) {
-			if (matrix[r]![c] === "x") {
-				matrix[r]![c] = isBetweenPipes ? "I" : "O";
-			} else if (["-", "L", "F", "J", "7"].includes(matrix[r]![c]!)) {
+		for (let r = 0; r < rows * 2; r++) {
+			const sym = matrix[~~(r / 2)]![~~(c / 2)]!;
+
+			if (sym === "?") {
+				matrix[~~(r / 2)]![~~(c / 2)] = isBetweenPipes ? "I" : "O";
+				count += isBetweenPipes;
+			} else if (
+				(r % 2 === 0 && sym === "-") ||
+				(r % 2 === 0 && c % 2 === 1 && sym === "F") ||
+				(r % 2 === 0 && c % 2 === 1 && sym === "L") ||
+				(r % 2 === 0 && c % 2 === 0 && sym === "7") ||
+				(r % 2 === 0 && c % 2 === 0 && sym === "J")
+			) {
 				isBetweenPipes = 1 - isBetweenPipes;
 			}
 		}
 	}
 
-	console.log(
-		matrix.reduce<number>((acc, r) => {
-			acc += r.reduce<number>((acc, c) => {
-				return acc + (c === "I" ? 1 : 0);
-			}, 0);
-			return acc;
-		}, 0)
-	);
-
-	return matrix;
+	return count;
 };
 
-const printMatrix = (matrix: string[][]) =>
-	console.log(matrix.map((r) => r.join("")).join("\n"));
+// const printMatrix = (matrix: string[][]) =>
+// 	console.log(matrix.map((r) => r.join("")).join("\n"));
 
 possibleStartPipes.forEach((pipe) => {
-	printMatrix(countInnerCells(findLoop(matrix, startR, startC, pipe)));
+	console.log(countInnerCells(findLoop(matrix, startR, startC, pipe)));
 });
