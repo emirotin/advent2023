@@ -6,6 +6,6 @@ const matrix = readLines(import.meta.url, "input.txt")
 	.filter(Boolean)
 	.map(parseLine);
 
-const galaxies = findExpandedGalaxies(matrix, 2);
+const galaxies = findExpandedGalaxies(matrix, 1_000_000);
 
 console.log(countDistances(galaxies));
