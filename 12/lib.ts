@@ -28,8 +28,34 @@ export const countOptions = (chunks: Chunk[], counts: number[]): number => {
 	// still have counts but no chunks = 0 ways
 	if (chunks.length === 0) return 0;
 
-	const firstChunk = chunks[0]!;
 	const firstCount = counts[0]!;
+
+	// if there's one count, it goes into one chunk exactly
+	// so, avoid recursion
+	if (counts.length === 1) {
+		return sum(
+			chunks.map((chunk) => {
+				if (chunk.length < firstCount) {
+					return 0;
+				}
+
+				const leftmostMark = chunk.findIndex((x) => x === true);
+				// chunk is empty
+				if (leftmostMark < 0) {
+					return chunk.length - firstCount + 1;
+				}
+
+				const rightmostMark = chunk.findLastIndex((x) => x === true);
+
+				const minStart = Math.max(0, rightmostMark - firstCount + 1);
+				const maxStart = Math.min(leftmostMark, chunk.length - firstCount);
+
+				return maxStart - minStart + 1;
+			})
+		);
+	}
+
+	const firstChunk = chunks[0]!;
 
 	// if the first chunk is empty one option is there are no marks inside
 	let res = isEmpty(firstChunk) ? countOptions(chunks.slice(1), counts) : 0;

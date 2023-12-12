@@ -4,7 +4,7 @@ import { countOptions, parseLine } from "./lib.js";
 const repeat = (s: string, n: number, sep: string) =>
 	Array.from({ length: n }).fill(s).join(sep);
 
-const lines = readLines(import.meta.url, "demo.txt")
+const lines = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
 	.filter(Boolean)
 	.map((line) => {
