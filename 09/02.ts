@@ -4,7 +4,7 @@ import { getVal as _getVal } from "./lib.js";
 const lines = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
 	.filter(Boolean)
-	.map(parseNums);
+	.map((l) => parseNums(l));
 
 const extrapolateLeft = (ns: number[]) => {
 	const getVal = _getVal(ns);
