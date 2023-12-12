@@ -19,5 +19,5 @@ export const prod = (arr: number[]) => arr.reduce((a, b) => a * b, 1);
 
 export const uniq = <T>(arr: T[]) => [...new Set(arr)];
 
-export const parseNums = (line: string) =>
-	line.split(/\s+/).map((n) => parseInt(n));
+export const parseNums = (line: string, sep: string | RegExp = /\s+/) =>
+	line.split(sep).map((n) => parseInt(n));
