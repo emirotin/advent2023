@@ -20,7 +20,20 @@ export const parseLine = (line: string) => {
 
 export const isEmpty = (chunk: Chunk) => chunk.every((x) => x === undefined);
 
+const cache: Record<string, number> = {};
+
 export const countOptions = (chunks: Chunk[], counts: number[]): number => {
+	const key =
+		chunks
+			.map((chunk) => chunk.map((c) => Number(c ?? false)).join(""))
+			.join("|") +
+		" " +
+		counts.join(",");
+
+	if (cache[key]) {
+		return cache[key]!;
+	}
+
 	// place nothing among 0 or more chunks
 	// - one way if all remaining chunks are empty
 	// - no way if some of them must contain a mark
@@ -32,28 +45,50 @@ export const countOptions = (chunks: Chunk[], counts: number[]): number => {
 
 	// if there's one count, it goes into one chunk exactly
 	// so, avoid recursion
-	if (counts.length === 1) {
-		return sum(
-			chunks.map((chunk) => {
-				if (chunk.length < firstCount) {
-					return 0;
-				}
+	// if (counts.length === 1) {
+	// 	return sum(
+	// 		chunks.map((chunk) => {
+	// 			if (chunk.length < firstCount) {
+	// 				return 0;
+	// 			}
 
-				const leftmostMark = chunk.findIndex((x) => x === true);
-				// chunk is empty
-				if (leftmostMark < 0) {
-					return chunk.length - firstCount + 1;
-				}
+	// 			const leftmostMark = chunk.findIndex((x) => x === true);
+	// 			// chunk is empty
+	// 			if (leftmostMark < 0) {
+	// 				return chunk.length - firstCount + 1;
+	// 			}
 
-				const rightmostMark = chunk.findLastIndex((x) => x === true);
+	// 			const rightmostMark = chunk.findLastIndex((x) => x === true);
 
-				const minStart = Math.max(0, rightmostMark - firstCount + 1);
-				const maxStart = Math.min(leftmostMark, chunk.length - firstCount);
+	// 			const minStart = Math.max(0, rightmostMark - firstCount + 1);
+	// 			const maxStart = Math.min(leftmostMark, chunk.length - firstCount);
 
-				return maxStart - minStart + 1;
-			})
-		);
-	}
+	// 			return maxStart - minStart + 1;
+	// 		})
+	// 	);
+	// }
+
+	// // split the counts on the max element
+	// const maxCount = Math.max(...counts);
+	// if (maxCount > 3) {
+	// 	const maxCountIndex = counts.findIndex((x) => x === maxCount);
+	// 	const leftCounts = counts.slice(0, maxCountIndex);
+	// 	const rightCounts = counts.slice(maxCountIndex + 1);
+
+	// 	let res = 0;
+	// 	for (let i = 0; i < chunks.length; i++) {
+	// 		if (chunks[i]!.length < maxCount) {
+	// 			continue;
+	// 		}
+	// 		res +=
+	// 			countOptions(chunks.slice(0, i), leftCounts) *
+	// 			countOptions([chunks[i]!], [maxCount]) *
+	// 			countOptions(chunks.slice(i + 1), rightCounts);
+	// 	}
+
+	// 	cache[key] = res;
+	// 	return res;
+	// }
 
 	const firstChunk = chunks[0]!;
 
@@ -77,5 +112,6 @@ export const countOptions = (chunks: Chunk[], counts: number[]): number => {
 		res += countOptions([reducedChunk, ...chunks.slice(1)], counts.slice(1));
 	}
 
+	cache[key] = res;
 	return res;
 };
