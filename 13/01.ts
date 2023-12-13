@@ -1,19 +1,27 @@
 import { readFile, sum } from "../lib/index.js";
 
-const findHorizontalReflection = (map: string[]) => {
-	const rows = map.length;
-	for (let i = 1; i < rows; i++) {
-		const count = Math.min(i, rows - i);
+const findReflection = (lines: string[]) => {
+	const n = lines.length;
+
+	for (let i = 1; i < n; i++) {
+		const matchingLinesCount = Math.min(i, n - i);
 		let ok = true;
-		for (let j = 0; j < count; j++) {
-			if (map[i - j - 1] !== map[i + j]) {
+
+		for (let j = 0; j < matchingLinesCount; j++) {
+			if (lines[i - j - 1] !== lines[i + j]) {
 				ok = false;
 				break;
 			}
 		}
+
 		if (ok) return i;
 	}
+
 	return 0;
+};
+
+const findHorizontalReflection = (map: string[]) => {
+	return findReflection(map);
 };
 
 const toColumns = (map: string[]) => {
@@ -28,22 +36,7 @@ const toColumns = (map: string[]) => {
 };
 
 const findVerticalReflection = (map: string[]) => {
-	map = toColumns(map);
-
-	const columns = map.length;
-
-	for (let i = 1; i < columns; i++) {
-		const count = Math.min(i, columns - i);
-		let ok = true;
-		for (let j = 0; j < count; j++) {
-			if (map[i - j - 1] !== map[i + j]) {
-				ok = false;
-				break;
-			}
-		}
-		if (ok) return i;
-	}
-	return 0;
+	return findReflection(toColumns(map));
 };
 
 const parseMap = (map: string) => map.trim().split("\n");
