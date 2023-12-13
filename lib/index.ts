@@ -9,8 +9,12 @@ export const getFilePath = (metaUrl: string, fileName: string) => {
 	return path.join(getDirname(metaUrl), fileName);
 };
 
+export const readFile = (metaUrl: string, fileName: string) => {
+	return fs.readFileSync(getFilePath(metaUrl, fileName), "utf-8");
+};
+
 export const readLines = (metaUrl: string, fileName: string) => {
-	return fs.readFileSync(getFilePath(metaUrl, fileName), "utf-8").split("\n");
+	return readFile(metaUrl, fileName).split("\n");
 };
 
 export const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
