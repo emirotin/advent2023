@@ -1,8 +1,5 @@
-import { readLines, sum } from "../lib/index.js";
-
-type Char = "." | "O" | "#";
-
-const parseLine = (line: string) => line.split("") as Char[];
+import { readLines } from "../lib/index.js";
+import { type Char, parseLine, totalLoad } from "./lib.js";
 
 const map = readLines(import.meta.url, "input.txt")
 	.map((s) => s.trim())
@@ -31,10 +28,4 @@ const tiltNorth = (map: Char[][]) => {
 
 tiltNorth(map);
 
-const rows = map.length;
-
-console.log(
-	sum(
-		map.map((row, i) => (rows - i) * sum(row.map((c) => (c === "O" ? 1 : 0))))
-	)
-);
+console.log(totalLoad(map));
