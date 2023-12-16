@@ -16,14 +16,12 @@ type Point = { r: number; c: number };
 type Direction = "n" | "s" | "w" | "e";
 
 type Beam = {
-	start: Point;
 	current: Point;
 	direction: Direction;
 };
 
 const beams: Beam[] = [
 	{
-		start: { r: 0, c: -1 },
 		current: { r: 0, c: -1 },
 		direction: "e",
 	},
@@ -131,29 +129,13 @@ while (beams.length) {
 
 		if (c === "-") {
 			newBeams.push(
-				{
-					start: p,
-					current: p,
-					direction: "w",
-				},
-				{
-					start: p,
-					current: p,
-					direction: "e",
-				}
+				{ current: p, direction: "w" },
+				{ current: p, direction: "e" }
 			);
 		} else {
 			newBeams.push(
-				{
-					start: p,
-					current: p,
-					direction: "n",
-				},
-				{
-					start: p,
-					current: p,
-					direction: "s",
-				}
+				{ current: p, direction: "n" },
+				{ current: p, direction: "s" }
 			);
 		}
 	}
