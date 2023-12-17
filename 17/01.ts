@@ -1,6 +1,6 @@
-import { readLines, parseNums, sum } from "../lib/index.js";
+import { readLines, parseNums } from "../lib/index.js";
 
-const map = readLines(import.meta.url, "demo.txt")
+const map = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
 	.map((l) => parseNums(l, ""));
 
@@ -106,45 +106,32 @@ const edge = memoize((v: string) => {
 	return map[r]![c]!;
 });
 
+// https://en.wikipedia.org/wiki/Shortest_path_faster_algorithm
 const q: string[] = [];
 const dist = new Map<string, number>();
-const prev = new Map<string, string | undefined>();
 for (const v of vertexes) {
 	dist.set(v, Infinity);
-	prev.set(v, undefined);
-	q.push(v);
 }
 const source = toStr({ r: 0, c: 0, d: "x", s: 0 });
 dist.set(source, 0);
-
-const isTarget = (v: string) => v.endsWith(`-${rows - 1}-${cols - 1}`);
-
-const start = Date.now();
+q.push(source);
 
 while (q.length) {
-	if (q.length % 1000 === 0) {
-		console.log((Date.now() - start) / 1000);
-	}
-	const targets = q.filter(isTarget);
-	if (!targets.length) break;
-
-	const candidates = q
-		.map((v) => [dist.get(v)!, v] as const)
-		.sort(([a], [b]) => a - b);
-	const [d, u] = candidates[0]!;
-
-	const i = q.indexOf(u);
-	q.splice(i, 1);
+	const u = q.shift()!;
+	const d = dist.get(u)!;
 
 	for (const v of neighbors(u)) {
-		if (!q.includes(v)) continue;
 		const alt = d + edge(v);
 		if (alt < dist.get(v)!) {
 			dist.set(v, alt);
-			prev.set(v, u);
+			if (!q.includes(v)) {
+				q.push(v);
+			}
 		}
 	}
 }
+
+const isTarget = (v: string) => v.endsWith(`-${rows - 1}-${cols - 1}`);
 
 const targets = vertexes.filter(isTarget);
 
