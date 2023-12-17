@@ -9,7 +9,7 @@
 			"request": "launch",
 			"name": "Launch Program",
 			"skipFiles": ["<node_internals>/**"],
-			"program": "${workspaceFolder}/17/01.ts",
+			"program": "${workspaceFolder}/17/01-new.ts",
 			"outFiles": ["${workspaceFolder}/**/*.js"],
 			"runtimeArgs": ["--import=tsimp/import"]
 		}
