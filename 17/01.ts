@@ -19,7 +19,9 @@ type Vertex = {
 const directions: Direction[] = ["n", "s", "w", "e"] as const;
 const steps = [1, 2, 3] as const;
 
-const vertexes: Vertex[] = [{ r: 0, c: 0, d: "x", s: 0 }];
+const toStr = ({ r, c, d, s }: Vertex) => `${d}-${s}-${r}-${c}`;
+
+const vertexes: string[] = [toStr({ r: 0, c: 0, d: "x", s: 0 })];
 for (let r = 0; r < rows; r++) {
 	for (let c = 0; c < cols; c++) {
 		for (const d of directions) {
@@ -30,7 +32,7 @@ for (let r = 0; r < rows; r++) {
 					(d === "n" && r < rows - 1) ||
 					(d === "s" && r > 0)
 				)
-					vertexes.push({ r, c, d, s });
+					vertexes.push(toStr({ r, c, d, s }));
 			}
 		}
 	}
@@ -52,8 +54,29 @@ const dc: Record<Direction, number> = {
 	x: Infinity,
 } as const;
 
-const neighbors = (v: Vertex): Vertex[] => {
-	const { r, c, d, s } = v;
+const fromStr = (v: string): Vertex => {
+	const parts = v.split("-");
+	const d = parts[0] as Direction;
+	const s = parseInt(parts[1]!);
+	const r = parseInt(parts[2]!);
+	const c = parseInt(parts[3]!);
+
+	return { r, c, d, s };
+};
+
+const memoize = <T>(fn: (v: string) => T): ((v: string) => T) => {
+	const memo = new Map<string, T>();
+	const wrapped = (v: string) => {
+		if (memo.has(v)) return memo.get(v)!;
+		const res = fn(v);
+		memo.set(v, res);
+		return res;
+	};
+	return wrapped;
+};
+
+const neighbors = memoize((v: string): string[] => {
+	const { r, c, d, s } = fromStr(v);
 
 	const turnDirections = [
 		(d === "w" || d === "e" || d === "x") && r > 0 && "n",
@@ -75,40 +98,47 @@ const neighbors = (v: Vertex): Vertex[] => {
 	return [
 		...turnDirections.map((d) => ({ r: r + dr[d], c: c + dc[d], d, s: 1 })),
 		...sameDirection.map((d) => ({ r: r + dr[d], c: c + dc[d], d, s: s + 1 })),
-	].map(getVertex);
-};
+	].map(toStr);
+});
 
-const getVertex = (v: Vertex) =>
-	vertexes.find(
-		(u) => u.r === v.r && u.c === v.c && u.d === v.d && u.s === v.s
-	)!;
+const edge = memoize((v: string) => {
+	const { r, c } = fromStr(v);
+	return map[r]![c]!;
+});
 
-const edge = (v1: Vertex, v2: Vertex) => {
-	return map[v2.r]![v2.c]!;
-};
-
-const q: Vertex[] = [];
-const dist = new Map<Vertex, number>();
-const prev = new Map<Vertex, Vertex | undefined>();
+const q: string[] = [];
+const dist = new Map<string, number>();
+const prev = new Map<string, string | undefined>();
 for (const v of vertexes) {
 	dist.set(v, Infinity);
 	prev.set(v, undefined);
 	q.push(v);
 }
-const source = getVertex({ r: 0, c: 0, d: "x", s: 0 });
+const source = toStr({ r: 0, c: 0, d: "x", s: 0 });
 dist.set(source, 0);
 
+const isTarget = (v: string) => v.endsWith(`-${rows - 1}-${cols - 1}`);
+
+const start = Date.now();
+
 while (q.length) {
+	if (q.length % 1000 === 0) {
+		console.log((Date.now() - start) / 1000);
+	}
+	const targets = q.filter(isTarget);
+	if (!targets.length) break;
+
 	const candidates = q
 		.map((v) => [dist.get(v)!, v] as const)
 		.sort(([a], [b]) => a - b);
 	const [d, u] = candidates[0]!;
+
 	const i = q.indexOf(u);
 	q.splice(i, 1);
 
 	for (const v of neighbors(u)) {
 		if (!q.includes(v)) continue;
-		const alt = d + edge(u, v);
+		const alt = d + edge(v);
 		if (alt < dist.get(v)!) {
 			dist.set(v, alt);
 			prev.set(v, u);
@@ -116,10 +146,10 @@ while (q.length) {
 	}
 }
 
-const targets = vertexes.filter((v) => v.r === rows - 1 && v.c === cols - 1);
+const targets = vertexes.filter(isTarget);
 
 const paths = targets.map((t) => {
-	const s: Vertex[] = [];
+	const s: string[] = [];
 	let u = t;
 
 	if (prev.get(u) || u === source) {
@@ -133,5 +163,14 @@ const paths = targets.map((t) => {
 });
 
 console.log(
-	Math.min(...paths.map((p) => sum(p.slice(1).map(({ r, c }) => map[r]![c]!))))
+	Math.min(
+		...paths.map((p) =>
+			sum(
+				p.slice(1).map((v) => {
+					const { r, c } = fromStr(v);
+					return map[r]![c]!;
+				})
+			)
+		)
+	)
 );
