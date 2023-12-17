@@ -32,11 +32,9 @@ const findMinAux = (
 	c: number,
 	d: Direction,
 	lastStreakLength: number = 0,
-	history: string[] = [],
-	stepsHistory: Direction[] = []
+	history: string[] = []
 ): number => {
 	history = [...history, `${r}-${c}`];
-	stepsHistory = [...stepsHistory, d].slice(-3);
 
 	const v = map[r]![c]!;
 
@@ -44,7 +42,7 @@ const findMinAux = (
 		return v;
 	}
 
-	const key = `${stepsHistory.join("=>")}=>${r}-${c}`;
+	const key = `${d}(${lastStreakLength})=>${r}-${c}`;
 	if (globalHistory.has(key)) {
 		return globalHistory.get(key)!;
 	}
@@ -79,9 +77,7 @@ const findMinAux = (
 
 	const res =
 		Math.min(
-			...nextTurns.map(([r, c, d, s]) =>
-				findMinAux(r, c, d, s, history, stepsHistory)
-			)
+			...nextTurns.map(([r, c, d, s]) => findMinAux(r, c, d, s, history))
 		) + v;
 
 	globalHistory.set(key, res);
