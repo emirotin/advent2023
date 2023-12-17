@@ -1,6 +1,6 @@
 import { readLines, parseNums } from "../lib/index.js";
 
-const map = readLines(import.meta.url, "demo.txt")
+const map = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
 	.map((l) => parseNums(l, ""));
 
@@ -17,7 +17,7 @@ type Vertex = {
 };
 
 const directions: Direction[] = ["n", "s", "w", "e"] as const;
-const steps = [1, 2, 3] as const;
+const steps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
 const toStr = ({ r, c, d, s }: Vertex) => `${d}-${s}-${r}-${c}`;
 
@@ -85,21 +85,24 @@ const neighbors = memoize((v: string): string[] => {
 		].map((v) => toStr(v));
 	}
 
-	const turnDirections = [
-		(d === "w" || d === "e") && r > 0 && "n",
-		(d === "w" || d === "e") && r < rows - 1 && "s",
-		(d === "n" || d === "s") && c > 0 && "w",
-		(d === "n" || d === "s") && c < cols - 1 && "e",
-	].filter(Boolean) as Direction[];
-
-	const sameDirection =
-		s >= 3
+	const turnDirections =
+		s < 4
 			? []
 			: ([
-					d === "w" && c > 0 && "w",
-					d === "e" && c < cols - 1 && "e",
-					d === "n" && r > 0 && "n",
-					d === "s" && r < rows - 1 && "s",
+					(d === "w" || d === "e") && r >= 4 && "n",
+					(d === "w" || d === "e") && r <= rows - 5 && "s",
+					(d === "n" || d === "s") && c >= 4 && "w",
+					(d === "n" || d === "s") && c <= cols - 5 && "e",
+			  ].filter(Boolean) as Direction[]);
+
+	const sameDirection =
+		s >= 10
+			? []
+			: ([
+					d === "w" && c > 0 && c >= 4 - s && "w",
+					d === "e" && c < cols - 1 && c <= cols - 5 + s && "e",
+					d === "n" && r > 0 && r >= 4 - s && "n",
+					d === "s" && r < rows - 1 && r <= rows - 5 + s && "s",
 			  ].filter(Boolean) as Direction[]);
 
 	return [
