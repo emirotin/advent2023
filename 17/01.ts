@@ -148,29 +148,4 @@ while (q.length) {
 
 const targets = vertexes.filter(isTarget);
 
-const paths = targets.map((t) => {
-	const s: string[] = [];
-	let u = t;
-
-	if (prev.get(u) || u === source) {
-		while (u) {
-			s.unshift(u);
-			u = prev.get(u)!;
-		}
-	}
-
-	return s;
-});
-
-console.log(
-	Math.min(
-		...paths.map((p) =>
-			sum(
-				p.slice(1).map((v) => {
-					const { r, c } = fromStr(v);
-					return map[r]![c]!;
-				})
-			)
-		)
-	)
-);
+console.log(Math.min(...targets.map((t) => dist.get(t)!)));
