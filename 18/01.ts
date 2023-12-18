@@ -5,13 +5,10 @@ type InputDir = "U" | "D" | "L" | "R";
 type Turn = "nw" | "ne" | "sw" | "se" | "wn" | "ws" | "en" | "es";
 type MapChar = "." | "L" | "J" | "7" | "F" | "|" | "-";
 
-type InstructionD = {
+type Instruction = {
 	d: Direction;
 	n: number;
-	c: string;
 };
-
-type InstructionT = { t: Turn; c: string };
 
 const charToDirection: Record<InputDir, Direction> = {
 	U: "n",
@@ -20,12 +17,11 @@ const charToDirection: Record<InputDir, Direction> = {
 	R: "e",
 };
 
-const parseInstr = (s: string): InstructionD => {
+const parseInstr = (s: string): Instruction => {
 	const parts = s.split(" ");
 	return {
 		d: charToDirection[parts[0] as InputDir],
 		n: parseInt(parts[1]!),
-		c: parts[2]!.slice(1, -1),
 	};
 };
 
@@ -34,17 +30,14 @@ const instructions = readLines(import.meta.url, "input.txt")
 	.filter(Boolean)
 	.map(parseInstr);
 
-const turns: InstructionT[] = [];
+const turns: Turn[] = [];
 
 for (let i = 1; i <= instructions.length; i++) {
-	const current = instructions[i % instructions.length]! as InstructionD;
-	const prev = instructions[i - 1]! as InstructionD;
+	const current = instructions[i % instructions.length]!;
+	const prev = instructions[i - 1]!;
 	const turn = (prev.d + current.d) as Turn;
 
-	turns.push({
-		t: turn,
-		c: prev.c,
-	});
+	turns.push(turn);
 }
 
 const turnToChar: Record<Turn, MapChar> = {
@@ -126,7 +119,7 @@ const drawBorders = () => {
 			n -= 1;
 		}
 		const turn = turns.shift()!;
-		map[r]![c] = turnToChar[turn.t];
+		map[r]![c] = turnToChar[turn];
 	}
 
 	expand("n");
