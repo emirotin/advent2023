@@ -1,4 +1,4 @@
-import { readLines, parseNums, sum } from "../lib/index.js";
+import { readLines, sum } from "../lib/index.js";
 
 type Direction = "n" | "s" | "w" | "e";
 type InputDir = "U" | "D" | "L" | "R";
