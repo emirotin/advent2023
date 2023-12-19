@@ -1,183 +1,131 @@
-import { readLines, parseNums, sum } from "../lib/index.js";
+import { readLines } from "../lib/index.js";
+import {
+	areOpposite,
+	intersects,
+	isHoriz,
+	isNot,
+	isRightTurn,
+	isVert,
+	parseInstr,
+	stepsToSegments,
+} from "./lib.js";
 
-type Direction = "n" | "s" | "w" | "e";
-type InputDir = "U" | "D" | "L" | "R";
-
-type Step = {
-	d: Direction;
-	n: number;
-	x: number;
-	y: number;
-};
-
-const charToDirection: Record<InputDir, Direction> = {
-	U: "n",
-	D: "s",
-	L: "w",
-	R: "e",
-};
-
-// const encodedDirections = ["R", "D", "L", "U"] as const;
-
-// const parseInstr = (s: string): Step => {
-// 	const parts = s.split(" ")[2]!.slice(2, -1);
-// 	const i = parseInt(parts.slice(-1));
-// 	return {
-// 		d: charToDirection[encodedDirections[i]!],
-// 		n: parseInt("0x" + parts.slice(0, -1)),
-// 	};
-// };
-
-const parseInstr = (s: string): Step => {
-	const parts = s.split(" ");
-	return {
-		d: charToDirection[parts[0] as InputDir],
-		n: parseInt(parts[1]!),
-		x: 0,
-		y: 0,
-	};
-};
-
-let steps = readLines(import.meta.url, "demo.txt")
+let steps = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
 	.filter(Boolean)
-	.map(parseInstr);
+	.map(parseInstr({ newMode: true }));
 
-const isRightTurn = (s1: Step, s2: Step) => {
-	const d1 = s1.d;
-	const d2 = s2.d;
-
-	return (
-		(d1 === "e" && d2 === "s") ||
-		(d1 === "s" && d2 === "w") ||
-		(d1 === "w" && d2 === "n") ||
-		(d1 === "n" && d2 === "e")
-	);
-};
-
-for (let i = 0; i < steps.length; i++) {
-	const s1 = steps[i]!;
-	const s2 = steps[(i + 1) % steps.length]!;
-	if (isRightTurn(s1, s2)) {
-		s2.n += 1;
-	} else {
-		s1.n -= 1;
-	}
-}
-
-let x = 0;
-let y = 0;
-
-for (let i = 0; i < steps.length; i++) {
-	const s = steps[i]!;
-	s.x = x;
-	s.y = y;
-	switch (s.d) {
-		case "e":
-			x += s.n;
-			break;
-		case "w":
-			x -= s.n;
-			break;
-		case "n":
-			y -= s.n;
-			break;
-		case "s":
-			y += s.n;
-			break;
-	}
-}
-
-const areOpposite = (s1: Step, s2: Step) => {
-	const d1 = s1.d;
-	const n1 = s1.n;
-	const d2 = s2.d;
-	const n2 = s2.n;
-	const diff = Math.abs(n1 - n2);
-
-	if (
-		(d1 === "n" && d2 === "s") ||
-		(d1 === "s" && d2 === "n") ||
-		(d1 === "w" && d2 === "e") ||
-		(d1 === "e" && d2 === "w")
-	) {
-		return {
-			n: diff,
-			d: n1 > n2 ? d1 : d2,
-		};
-	}
-};
+let segments = stepsToSegments(steps);
 
 let result = 0;
 
-while (steps.length) {
-	let changed = false;
+while (segments.length) {
 	// cut extending rects
-	for (let i = 0; i < steps.length; i++) {
-		const s1 = steps[i]!;
-		const s2 = steps[(i + 1) % steps.length]!;
-		const s3 = steps[(i + 2) % steps.length]!;
-		if (isRightTurn(s1, s2) && isRightTurn(s2, s3)) {
-			const closestEdge =
-				s2.d === "s"
-					? Math.max(
-							...steps
-								.filter((s) => (s.d === "n" || s.d === "s") && s.x < s2.x)
-								.map((s) => s.x)
-					  )
-					: s2.d === "n"
-					? Math.min(
-							...steps
-								.filter((s) => (s.d === "n" || s.d === "s") && s.x > s2.x)
-								.map((s) => s.x)
-					  )
-					: s2.d === "e"
-					? Math.min(
-							...steps
-								.filter((s) => (s.d === "e" || s.d === "w") && s.y > s2.y)
-								.map((s) => s.y)
-					  )
-					: s2.d === "w"
-					? Math.max(
-							...steps
-								.filter((s) => (s.d === "e" || s.d === "w") && s.y < s2.y)
-								.map((s) => s.y)
-					  )
-					: 0;
-			const m = Math.min(
-				s1.n,
-				s3.n,
-				Math.abs(closestEdge - (s2.d === "n" || s2.d === "s" ? s2.x : s2.y))
-			);
-			if (m > 0) {
-				s1.n -= m;
-				s3.n -= m;
-				result += m * s2.n;
-				changed = true;
+	for (let i = 0; i < segments.length; i++) {
+		const s1 = segments[i]!;
+		const s2 = segments[(i + 1) % segments.length]!;
+		const s3 = segments[(i + 2) % segments.length]!;
+		if (!isRightTurn(s1, s2) || !isRightTurn(s2, s3)) {
+			continue;
+		}
+
+		let closestEdge: number = 0;
+		switch (s2.d) {
+			case "s": {
+				let otherEdges = segments
+					.filter(isNot(s2))
+					.filter(isVert)
+					.filter((s) => intersects([s1.ymin, s3.ymin], [s.ymin, s.ymax]))
+					.filter((s) => s.xmin <= s2.xmin);
+				closestEdge = Math.max(...otherEdges.map(({ xmin }) => xmin));
+				break;
 			}
+			case "n": {
+				let otherEdges = segments
+					.filter(isNot(s2))
+					.filter(isVert)
+					.filter((s) => intersects([s1.ymin, s3.ymin], [s.ymin, s.ymax]))
+					.filter((s) => s.xmin >= s2.xmin);
+				closestEdge = Math.min(...otherEdges.map(({ xmin }) => xmin));
+				break;
+			}
+			case "e": {
+				let otherEdges = segments
+					.filter(isNot(s2))
+					.filter(isHoriz)
+					.filter((s) => intersects([s1.xmin, s3.xmin], [s.xmin, s.xmax]))
+					.filter((s) => s.ymin >= s2.ymin);
+				closestEdge = Math.min(...otherEdges.map(({ ymin }) => ymin));
+				break;
+			}
+			case "w": {
+				let otherEdges = segments
+					.filter(isNot(s2))
+					.filter(isHoriz)
+					.filter((s) => intersects([s1.xmin, s3.xmin], [s.xmin, s.xmax]))
+					.filter((s) => s.ymin <= s2.ymin);
+				closestEdge = Math.max(...otherEdges.map(({ ymin }) => ymin));
+				break;
+			}
+		}
+
+		const m = Math.min(
+			s1.n,
+			s3.n,
+			Math.abs(closestEdge - (isVert(s2) ? s2.xmin : s2.ymin))
+		);
+		if (m == 0) {
+			continue;
+		}
+
+		s1.n -= m;
+		s3.n -= m;
+		result += m * s2.n;
+
+		switch (s2.d) {
+			case "n":
+				s2.xmin += m;
+				s2.xmax += m;
+				break;
+			case "s":
+				s2.xmin -= m;
+				s2.xmax -= m;
+				break;
+			case "w":
+				s2.ymin -= m;
+				s2.ymax -= m;
+				break;
+			case "e":
+				s2.ymin += m;
+				s2.ymax += m;
+				break;
 		}
 	}
 
-	if (!changed) break;
-
 	// remove empty segments
-	steps = steps.filter(({ n }) => n > 0);
+	segments = segments.filter(({ n }) => n > 0);
 	// merge subsequent segments
 	let i = 0;
 	let diff;
-	while (i < steps.length - 1) {
-		const s1 = steps[i]!;
-		const s2 = steps[(i + 1) % steps.length]!;
+	while (i < segments.length - 1) {
+		const s1 = segments[i]!;
+		const s2 = segments[(i + 1) % segments.length]!;
 		if (s1.d === s2.d) {
 			s2.n += s1.n;
-			steps.splice(i, 1);
+			s2.xmin = Math.min(s1.xmin, s2.xmin);
+			s2.xmax = Math.max(s1.xmax, s2.xmax);
+			s2.ymin = Math.min(s1.ymin, s2.ymin);
+			s2.ymax = Math.max(s1.ymax, s2.ymax);
+			segments.splice(i, 1);
 		} else if ((diff = areOpposite(s1, s2))) {
 			Object.assign(s2, diff);
-			steps.splice(i, 1);
+			segments.splice(i, 1);
 		} else {
 			i += 1;
 		}
 	}
+	segments = segments.filter(({ n }) => n > 0);
 }
 
 console.log(result);
+// console.log(segments);
