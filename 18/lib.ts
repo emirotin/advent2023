@@ -104,16 +104,8 @@ export const stepsToSegments = (steps: Step[]): Segment[] => {
 };
 
 export const areOpposite = (s1: Segment, s2: Segment) => {
-	if (s2.n > s1.n) {
-		const swap = s2;
-		s2 = s1;
-		s1 = swap;
-	}
-
 	const d1 = s1.d;
-	const n1 = s1.n;
 	const d2 = s2.d;
-	const n2 = s2.n;
 
 	if (
 		!(
@@ -125,40 +117,43 @@ export const areOpposite = (s1: Segment, s2: Segment) => {
 	)
 		return undefined;
 
+	// debugger;
+	const n1 = s1.n;
+	const n2 = s2.n;
 	const diff = Math.abs(n1 - n2);
 
-	let xmin, xmax, ymin, ymax;
+	let xFrom, xTo, yFrom, yTo;
 
 	switch (d1) {
 		case "s":
-			xmin = xmax = s1.xmin;
-			ymin = s1.ymin;
-			ymax = ymin + diff;
+			xFrom = xTo = s1.xmin;
+			yFrom = s1.ymin;
+			yTo = s1.ymax - n2;
 			break;
 		case "n":
-			xmin = xmax = s1.xmin;
-			ymax = s1.ymax;
-			ymin = ymax - diff;
+			xFrom = xTo = s1.xmin;
+			yFrom = s1.ymax;
+			yTo = s1.ymin + n2;
 			break;
 		case "e":
-			ymin = ymax = s1.ymin;
-			xmin = s1.xmin;
-			xmax = xmin + diff;
+			yFrom = yTo = s1.ymin;
+			xFrom = s1.xmin;
+			xTo = s1.xmax - n2;
 			break;
 		case "w":
-			ymin = ymax = s1.ymin;
-			xmax = s1.xmax;
-			xmin = xmax - diff;
+			yFrom = yTo = s1.ymin;
+			xFrom = s1.xmax;
+			xTo = s2.xmin + n2;
 			break;
 	}
 
 	return {
 		n: diff,
-		d: d1,
-		xmin,
-		xmax,
-		ymin,
-		ymax,
+		d: n1 > n2 ? d1 : d2,
+		xmin: Math.min(xFrom, xTo),
+		xmax: Math.max(xFrom, xTo),
+		ymin: Math.min(yFrom, yTo),
+		ymax: Math.max(yFrom, yTo),
 	};
 };
 
@@ -170,5 +165,84 @@ export const isNot =
 export const isVert = (s: Segment) => s.d === "n" || s.d === "s";
 export const isHoriz = (s: Segment) => s.d === "w" || s.d === "e";
 
-export const intersects = (a: [number, number], b: [number, number]) =>
-	b[0] < a[1] && b[1] > a[0];
+export const intersects = (a: [number, number], b: [number, number]) => {
+	return b[0] < a[1] && b[1] > a[0];
+};
+
+const toInterval = (s: Segment) => {
+	switch (s.d) {
+		case "n":
+		case "s":
+			return [s.ymin, s.ymax] as const;
+		case "w":
+		case "e":
+			return [s.xmin, s.xmax] as const;
+	}
+};
+
+export const contains = (s1: Segment, s2: Segment) => {
+	const a = toInterval(s1),
+		b = toInterval(s2);
+	return (
+		b[0] >= a[0] &&
+		b[1] <= a[1] &&
+		(isHoriz(s1) ? s1.ymin === s2.ymin : s1.xmin === s2.xmin)
+	);
+};
+
+export const split = (s1: Segment, s2: Segment) => {
+	let segments = isHoriz(s1)
+		? [
+				[s1.xmin, s2.xmin] as const,
+				[s2.xmin, s2.xmax] as const,
+				[s2.xmax, s1.xmax] as const,
+		  ]
+		: [
+				[s1.ymin, s2.ymin] as const,
+				[s2.ymin, s2.ymax] as const,
+				[s2.ymax, s1.ymax] as const,
+		  ];
+
+	segments = segments.filter(([a, b]) => b > a);
+	if (s1.d === "w" || s1.d === "n") {
+		segments.reverse();
+	}
+
+	return segments
+		.filter(([a, b]) => b > a)
+		.map(([min, max]) => ({
+			...s1,
+			[isHoriz(s1) ? "xmin" : "ymin"]: min,
+			[isHoriz(s1) ? "xmax" : "ymax"]: max,
+			n: max - min,
+		}));
+};
+
+export const eq = (
+	a: readonly [number, number],
+	b: readonly [number, number]
+) => {
+	return a[0] === b[0] && a[1] === b[1];
+};
+
+export const start = (s: Segment) => {
+	switch (s.d) {
+		case "n":
+		case "w":
+			return [s.xmax, s.ymax] as const;
+		case "s":
+		case "e":
+			return [s.xmin, s.ymin] as const;
+	}
+};
+
+export const end = (s: Segment) => {
+	switch (s.d) {
+		case "n":
+		case "w":
+			return [s.xmin, s.ymin] as const;
+		case "s":
+		case "e":
+			return [s.xmax, s.ymax] as const;
+	}
+};

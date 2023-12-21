@@ -5,7 +5,7 @@ export const getSegments = () => {
 	let steps = readLines(import.meta.url, 'input.txt')
 		.map((l) => l.trim())
 		.filter(Boolean)
-		.map(parseInstr({ newMode: false }));
+		.map(parseInstr({ newMode: true }));
 
 	return stepsToSegments(steps);
 };

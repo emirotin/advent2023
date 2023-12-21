@@ -16,33 +16,10 @@ import {
 export function* run(initialSegments: Segment[]) {
 	let loops = [initialSegments];
 
-	const checkSegmentsConnectivity = (segments: Segment[]) => {
-		for (let i = 0; i < segments.length; i++) {
-			const s1 = segments[i]!;
-			const s2 = segments[(i + 1) % segments.length]!;
-
-			if (!eq(end(s1), start(s2))) {
-				// console.log('DETACHED!');
-				// console.dir(segments);
-				return false;
-			}
-		}
-		return true;
-	};
-
-	const checkConnectivity = () => {
-		for (const segments of loops) {
-			if (!checkSegmentsConnectivity(segments)) {
-				return false;
-			}
-		}
-		return true;
-	};
-
 	const cleanupSegment = (sn: number) => {
-		const n = loops[sn].length;
-		loops[sn] = loops[sn].filter(({ n }) => n > 0);
-		return loops[sn].length < n;
+		const n = loops[sn]!.length;
+		loops[sn] = loops[sn]!.filter(({ n }) => n > 0);
+		return loops[sn]!.length < n;
 	};
 
 	const cleanupEmpty = () => {
@@ -154,12 +131,6 @@ export function* run(initialSegments: Segment[]) {
 
 			for (const [i, j] of extractions) {
 				const newLoop = loops[sn].splice(i, j - i + 1);
-				if (!checkSegmentsConnectivity(newLoop)) {
-					console.log('aaaaa');
-				}
-				if (!checkSegmentsConnectivity(loops[sn])) {
-					console.log('bbbbb');
-				}
 				loops.push(newLoop);
 			}
 		}
@@ -170,33 +141,17 @@ export function* run(initialSegments: Segment[]) {
 	const removeUnneededSegments = () => {
 		let changed = false;
 
-		// if (!checkConnectivity()) {
-		// 	console.log(0);
-		// }
-
 		do {
 			changed = cleanupEmpty();
-			// if (!checkConnectivity()) {
-			// 	console.log(1);
-			// }
 
 			const squashed = mergeAdjacent();
-			// if (!checkConnectivity()) {
-			// 	console.log(2);
-			// }
 
 			changed ||= squashed;
 			const extracted = extractDetachedLoops();
-			// if (!checkConnectivity()) {
-			// 	console.log(3);
-			// }
 
 			changed ||= extracted;
 			if (extracted) {
 				cleanupEmpty();
-				// if (!checkConnectivity()) {
-				// 	console.log(4);
-				// }
 			}
 		} while (changed);
 	};
