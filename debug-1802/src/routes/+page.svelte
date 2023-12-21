@@ -59,6 +59,7 @@
 		Result: {result}
 		{#if done}
 			<div>Done.</div>
+		{:else}<div>Segments: {currentSegments.length}</div>
 		{/if}
 	</div>
 </div>

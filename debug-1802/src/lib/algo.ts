@@ -113,7 +113,7 @@ export function* run(segments: Segment[]) {
 				let otherEdges = segments
 					.filter(isNot(s2))
 					.filter(isVert)
-					.filter((s) => intersects([s1.ymin, s3.ymin], [s.ymin, s.ymax]))
+					.filter((s) => intersects([s3.ymin, s1.ymin], [s.ymin, s.ymax]))
 					.filter((s) => s.xmin >= s2.xmin);
 				closestEdge = Math.min(...otherEdges.map(({ xmin }) => xmin));
 				break;
@@ -131,15 +131,15 @@ export function* run(segments: Segment[]) {
 				let otherEdges = segments
 					.filter(isNot(s2))
 					.filter(isHoriz)
-					.filter((s) => intersects([s1.xmin, s3.xmin], [s.xmin, s.xmax]))
-					.filter((s) => s.ymin <= s2.ymin);
-				closestEdge = Math.max(...otherEdges.map(({ ymin }) => ymin));
+					.filter((s) => intersects([s3.xmin, s1.xmin], [s.xmin, s.xmax]))
+					.filter((s) => s.ymax <= s2.ymax);
+				closestEdge = Math.max(...otherEdges.map(({ ymax }) => ymax));
 				break;
 			}
 		}
 
 		const m = Math.min(s1.n, s3.n, Math.abs(closestEdge - (isVert(s2) ? s2.xmin : s2.ymin)));
-		if (m == 0) {
+		if (m <= 0) {
 			return 0;
 		}
 

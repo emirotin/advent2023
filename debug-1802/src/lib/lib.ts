@@ -165,4 +165,6 @@ export const isNot =
 export const isVert = (s: Segment) => s.d === 'n' || s.d === 's';
 export const isHoriz = (s: Segment) => s.d === 'w' || s.d === 'e';
 
-export const intersects = (a: [number, number], b: [number, number]) => b[0] < a[1] && b[1] > a[0];
+export const intersects = (a: [number, number], b: [number, number]) => {
+	return b[0] < a[1] && b[1] > a[0];
+};
