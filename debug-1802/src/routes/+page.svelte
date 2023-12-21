@@ -27,7 +27,7 @@
 			currentSegments = itRes.value.segments;
 
 			await new Promise((res) => {
-				setTimeout(res, 500);
+				setTimeout(res, 200);
 			});
 		}
 
@@ -50,6 +50,7 @@
 				y2={s.ymax}
 				vector-effect="non-scaling-stroke"
 				stroke={s.d === 'n' ? '#099' : s.d === 's' ? '#909' : s.d === 'e' ? '#990' : '#999'}
+				data-d={s.d}
 			/>
 		{/each}
 	</svg>

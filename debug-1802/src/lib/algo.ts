@@ -96,22 +96,26 @@ export function* run(segments: Segment[]) {
 		const add = m * s2.n;
 
 		switch (s2.d) {
-			case 'n':
-				s2.xmin += m;
-				s2.xmax += m;
+			case 'n': {
+				const x = s2.xmin + m;
+				s2.xmin = s2.xmax = s1.xmin = s3.xmin = x;
 				break;
-			case 's':
-				s2.xmin -= m;
-				s2.xmax -= m;
+			}
+			case 's': {
+				const x = s2.xmin - m;
+				s2.xmin = s2.xmax = s1.xmax = s3.xmax = x;
 				break;
-			case 'w':
-				s2.ymin -= m;
-				s2.ymax -= m;
+			}
+			case 'w': {
+				const y = s2.ymin - m;
+				s2.ymin = s2.ymax = s1.ymin = s3.ymin = y;
 				break;
-			case 'e':
-				s2.ymin += m;
-				s2.ymax += m;
+			}
+			case 'e': {
+				const y = s2.ymin + m;
+				s2.ymin = s2.ymax = s1.ymax = s3.ymax = y;
 				break;
+			}
 		}
 
 		removeUnneededSegments();

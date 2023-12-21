@@ -104,16 +104,8 @@ export const stepsToSegments = (steps: Step[]): Segment[] => {
 };
 
 export const areOpposite = (s1: Segment, s2: Segment) => {
-	if (s2.n > s1.n) {
-		const swap = s2;
-		s2 = s1;
-		s1 = swap;
-	}
-
 	const d1 = s1.d;
-	const n1 = s1.n;
 	const d2 = s2.d;
-	const n2 = s2.n;
 
 	if (
 		!(
@@ -125,40 +117,43 @@ export const areOpposite = (s1: Segment, s2: Segment) => {
 	)
 		return undefined;
 
+	// debugger;
+	const n1 = s1.n;
+	const n2 = s2.n;
 	const diff = Math.abs(n1 - n2);
 
-	let xmin, xmax, ymin, ymax;
+	let xFrom, xTo, yFrom, yTo;
 
 	switch (d1) {
 		case 's':
-			xmin = xmax = s1.xmin;
-			ymin = s1.ymin;
-			ymax = ymin + diff;
+			xFrom = xTo = s1.xmin;
+			yFrom = s1.ymin;
+			yTo = s1.ymax - n2;
 			break;
 		case 'n':
-			xmin = xmax = s1.xmin;
-			ymax = s1.ymax;
-			ymin = ymax - diff;
+			xFrom = xTo = s1.xmin;
+			yFrom = s1.ymax;
+			yTo = s1.ymin + n2;
 			break;
 		case 'e':
-			ymin = ymax = s1.ymin;
-			xmin = s1.xmin;
-			xmax = xmin + diff;
+			yFrom = yTo = s1.ymin;
+			xFrom = s1.xmin;
+			xTo = s1.xmax - n2;
 			break;
 		case 'w':
-			ymin = ymax = s1.ymin;
-			xmax = s1.xmax;
-			xmin = xmax - diff;
+			yFrom = yTo = s1.ymin;
+			xFrom = s1.xmax;
+			xTo = s2.xmin + n2;
 			break;
 	}
 
 	return {
 		n: diff,
-		d: d1,
-		xmin,
-		xmax,
-		ymin,
-		ymax
+		d: n1 > n2 ? d1 : d2,
+		xmin: Math.min(xFrom, xTo),
+		xmax: Math.max(xFrom, xTo),
+		ymin: Math.min(yFrom, yTo),
+		ymax: Math.max(yFrom, yTo)
 	};
 };
 
