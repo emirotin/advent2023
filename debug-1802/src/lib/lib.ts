@@ -168,3 +168,66 @@ export const isHoriz = (s: Segment) => s.d === 'w' || s.d === 'e';
 export const intersects = (a: [number, number], b: [number, number]) => {
 	return b[0] < a[1] && b[1] > a[0];
 };
+
+const toInterval = (s: Segment) => {
+	switch (s.d) {
+		case 'n':
+		case 's':
+			return [s.ymin, s.ymax] as const;
+		case 'w':
+		case 'e':
+			return [s.xmin, s.xmax] as const;
+	}
+};
+
+export const contains = (s1: Segment, s2: Segment) => {
+	const a = toInterval(s1),
+		b = toInterval(s2);
+	return b[0] >= a[0] && b[1] <= a[1] && (isHoriz(s1) ? s1.ymin === s2.ymin : s1.xmin === s2.xmin);
+};
+
+export const split = (s1: Segment, s2: Segment) => {
+	let segments = isHoriz(s1)
+		? [[s1.xmin, s2.xmin] as const, [s2.xmin, s2.xmax] as const, [s2.xmax, s1.xmax] as const]
+		: [[s1.ymin, s2.ymin] as const, [s2.ymin, s2.ymax] as const, [s2.ymax, s1.ymax] as const];
+
+	segments = segments.filter(([a, b]) => b > a);
+	if (s1.d === 'w' || s1.d === 'n') {
+		segments.reverse();
+	}
+
+	return segments
+		.filter(([a, b]) => b > a)
+		.map(([min, max]) => ({
+			...s1,
+			[isHoriz(s1) ? 'xmin' : 'ymin']: min,
+			[isHoriz(s1) ? 'xmax' : 'ymax']: max,
+			n: max - min
+		}));
+};
+
+export const eq = (a: readonly [number, number], b: readonly [number, number]) => {
+	return a[0] === b[0] && a[1] === b[1];
+};
+
+export const start = (s: Segment) => {
+	switch (s.d) {
+		case 'n':
+		case 'w':
+			return [s.xmax, s.ymax] as const;
+		case 's':
+		case 'e':
+			return [s.xmin, s.ymin] as const;
+	}
+};
+
+export const end = (s: Segment) => {
+	switch (s.d) {
+		case 'n':
+		case 'w':
+			return [s.xmin, s.ymin] as const;
+		case 's':
+		case 'e':
+			return [s.xmax, s.ymax] as const;
+	}
+};
