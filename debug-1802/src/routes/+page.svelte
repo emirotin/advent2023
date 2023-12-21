@@ -27,7 +27,7 @@
 			currentSegments = itRes.value.segments;
 
 			await new Promise((res) => {
-				setTimeout(res, 150);
+				setTimeout(res, 100);
 			});
 		}
 
@@ -42,7 +42,7 @@
 		class="canvas"
 		viewBox={`${minX - pad} ${minY - pad} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad}`}
 	>
-		{#each currentSegments as s}
+		{#each currentSegments as s, i}
 			<line
 				x1={s.xmin}
 				x2={s.xmax}
@@ -51,6 +51,7 @@
 				vector-effect="non-scaling-stroke"
 				stroke={s.d === 'n' ? '#099' : s.d === 's' ? '#909' : s.d === 'e' ? '#990' : '#999'}
 				data-d={s.d}
+				data-i={i}
 			/>
 		{/each}
 	</svg>

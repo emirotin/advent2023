@@ -2,7 +2,7 @@ import { areOpposite, intersects, isHoriz, isNot, isRightTurn, isVert, type Segm
 
 export function* run(segments: Segment[]) {
 	const checkContinuity = () => {
-		for (let i = 0; i < segments.length - 1; i++) {
+		for (let i = 0; i < segments.length; i++) {
 			const s1 = segments[i]!;
 			const s2 = segments[(i + 1) % segments.length]!;
 
@@ -65,7 +65,7 @@ export function* run(segments: Segment[]) {
 			// merge subsequent segments
 			let i = 0;
 			let diff;
-			while (i < segments.length - 1) {
+			while (i < segments.length) {
 				const s1 = segments[i]!;
 				const s2 = segments[(i + 1) % segments.length]!;
 				if (s1.d === s2.d) {
