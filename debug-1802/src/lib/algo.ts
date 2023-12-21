@@ -1,6 +1,58 @@
 import { areOpposite, intersects, isHoriz, isNot, isRightTurn, isVert, type Segment } from './lib';
 
 export function* run(segments: Segment[]) {
+	const checkContinuity = () => {
+		for (let i = 0; i < segments.length - 1; i++) {
+			const s1 = segments[i]!;
+			const s2 = segments[(i + 1) % segments.length]!;
+
+			switch (s1.d) {
+				case 'n':
+					if (s2.d !== 'e' && s2.d !== 'w') return false;
+					if (s1.xmin !== s1.xmax) return false;
+					if (
+						!(s2.d === 'e'
+							? s1.xmax === s2.xmin && s1.ymin == s2.ymin
+							: s1.xmax === s2.xmax && s1.ymin == s2.ymin)
+					)
+						return false;
+					break;
+				case 's':
+					if (s2.d !== 'e' && s2.d !== 'w') return false;
+					if (s1.xmin !== s1.xmax) return false;
+					if (
+						!(s2.d === 'e'
+							? s1.xmin === s2.xmin && s1.ymax == s2.ymax
+							: s1.xmax === s2.xmax && s1.ymax == s2.ymax)
+					)
+						return false;
+					break;
+				case 'w':
+					if (s2.d !== 'n' && s2.d !== 's') return false;
+					if (s1.ymin !== s1.ymax) return false;
+					if (
+						!(s2.d === 'n'
+							? s1.xmin === s2.xmin && s1.ymax === s2.ymax
+							: s1.xmin === s2.xmin && s1.ymin === s2.ymin)
+					)
+						return false;
+					break;
+				case 'e':
+					if (s2.d !== 'n' && s2.d !== 's') return false;
+					if (s1.ymin !== s1.ymax) return false;
+					if (
+						!(s2.d === 'n'
+							? s1.xmax === s2.xmax && s1.ymax === s2.ymax
+							: s1.xmax === s2.xmax && s1.ymin === s2.ymin)
+					)
+						return false;
+					break;
+			}
+		}
+
+		return true;
+	};
+
 	const removeUnneededSegments = () => {
 		let changed = false;
 
@@ -93,27 +145,28 @@ export function* run(segments: Segment[]) {
 
 		s1.n -= m;
 		s3.n -= m;
+
 		const add = m * s2.n;
 
 		switch (s2.d) {
 			case 'n': {
 				const x = s2.xmin + m;
-				s2.xmin = s2.xmax = s1.xmin = s3.xmin = x;
+				s1.xmin = s3.xmin = s2.xmin = s2.xmax = x;
 				break;
 			}
 			case 's': {
 				const x = s2.xmin - m;
-				s2.xmin = s2.xmax = s1.xmax = s3.xmax = x;
+				s1.xmax = s3.xmax = s2.xmin = s2.xmax = x;
 				break;
 			}
 			case 'w': {
 				const y = s2.ymin - m;
-				s2.ymin = s2.ymax = s1.ymin = s3.ymin = y;
+				s1.ymax = s3.ymax = s2.ymin = s2.ymax = y;
 				break;
 			}
 			case 'e': {
 				const y = s2.ymin + m;
-				s2.ymin = s2.ymax = s1.ymax = s3.ymax = y;
+				s1.ymin = s3.ymin = s2.ymin = s2.ymax = y;
 				break;
 			}
 		}
@@ -134,7 +187,9 @@ export function* run(segments: Segment[]) {
 	const cutOneBump = (indices: number[]) => {
 		let add = 0;
 		for (const i of indices) {
-			if ((add = cutBump(i))) return add;
+			if ((add = cutBump(i))) {
+				return add;
+			}
 		}
 		return 0;
 	};

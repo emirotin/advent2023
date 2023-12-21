@@ -27,7 +27,7 @@
 			currentSegments = itRes.value.segments;
 
 			await new Promise((res) => {
-				setTimeout(res, 200);
+				setTimeout(res, 150);
 			});
 		}
 
@@ -82,7 +82,7 @@
 	}
 
 	.canvas line {
-		stroke-width: 3px;
+		stroke-width: 1px;
 	}
 
 	.result {
