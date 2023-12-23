@@ -3,7 +3,7 @@ import { readLines } from "../lib/index.js";
 const parseLine = (line: string, i: number) =>
 	line.split("").map((c) => (c === "#" ? "#" : "."));
 
-const map = readLines(import.meta.url, "demo.txt")
+const map = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
 	.filter(Boolean)
 	.map(parseLine);
@@ -61,18 +61,21 @@ while (toCheck.length) {
 
 console.log(longestPaths[rows - 1]![endC]!.d);
 
-console.log(
-	map
-		.map((row, r) =>
-			row
-				.map((x, c) =>
-					r === 0 && c === startC
-						? "S"
-						: longestPaths[rows - 1]![endC]!.h.includes(`${r}-${c}`)
-						? "O"
-						: x
-				)
-				.join("")
-		)
-		.join("\n")
-);
+const mapToShow = map
+	.map((row, r) =>
+		row
+			.map((x, c) =>
+				r === 0 && c === startC
+					? "S"
+					: longestPaths[rows - 1]![endC]!.h.includes(`${r}-${c}`) ||
+					  (r === rows - 1 && c === endC)
+					? "O"
+					: x
+			)
+			.join("")
+	)
+	.join("\n");
+
+console.log("#", mapToShow.split("").filter((c) => c === "#").length);
+console.log(".", mapToShow.split("").filter((c) => c === ".").length);
+console.log("O", mapToShow.split("").filter((c) => c === "O").length);
