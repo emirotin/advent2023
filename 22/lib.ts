@@ -11,7 +11,17 @@ export type Brick = {
 	supportedBy: string[];
 };
 
-const parseLine = (line: string) => {
+const toId = (n: number) => {
+	const ds: number[] = [];
+	while (n) {
+		ds.push(n % 26);
+		n = ~~(n / 26);
+	}
+
+	return ds.map((d) => String.fromCharCode(d + 64)).join("");
+};
+
+const parseLine = (line: string, i: number) => {
 	const [min, max] = line.split("~").map((s) => parseNums(s, ","));
 	return {
 		xmin: min![0]!,
@@ -20,7 +30,7 @@ const parseLine = (line: string) => {
 		xmax: max![0]!,
 		ymax: max![1]!,
 		zmax: max![2]!,
-		id: Math.random().toString().slice(2),
+		id: toId(i + 1),
 		supportedBy: [] as string[],
 	} satisfies Brick;
 };
