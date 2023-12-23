@@ -26,13 +26,6 @@ const longestPath = (
 	acc: number = 0
 ): number => {
 	if (cell[0] === 0 && cell[1] === startC) {
-		// console.log(acc);
-		// console.log(
-		// 	history
-		// 		.toReversed()
-		// 		.map((c) => `${c[0] + 1}-${c[1] + 1}`)
-		// 		.join(" ")
-		// );
 		return acc;
 	}
 
