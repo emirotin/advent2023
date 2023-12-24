@@ -18,11 +18,11 @@ type Coords = readonly [number, number];
 
 const longestPaths = Array.from({ length: rows }, () =>
 	Array.from({ length: cols })
-) as Array<Array<{ d: number; h: string[] } | undefined>>;
+) as Array<Array<{ d: number; hs: string[][] } | undefined>>;
 
 longestPaths[0]![startC] = {
 	d: 0,
-	h: [],
+	hs: [[]],
 };
 
 const toCheck = [[0, startC] as Coords];
@@ -34,25 +34,33 @@ while (toCheck.length) {
 
 	const currentRecord = longestPaths[coords[0]]![coords[1]]!;
 	const d = currentRecord.d;
-	const h = currentRecord.h.concat([coordsStr]);
+	const hs = currentRecord.hs.map((h) => h.concat([coordsStr]));
 
 	const nextTo = [
 		[coords[0] - 1, coords[1]] as const,
 		[coords[0] + 1, coords[1]] as const,
-		[coords[0], coords[1] - 1] as const,
 		[coords[0], coords[1] + 1] as const,
+		[coords[0], coords[1] - 1] as const,
 	]
 		.filter(([r, c]) => r >= 0 && r < rows && c >= 0 && c < cols)
 		.filter(([r, c]) => map[r]![c] !== "#")
 		.filter(([r, c]) => {
 			const lp = longestPaths[r]![c];
-			return lp === undefined || (lp.d < d + 1 && !h.includes(`${r}-${c}`));
+			return (
+				lp === undefined ||
+				(lp.d < d + 1 && hs.some((h) => !h.includes(`${r}-${c}`)))
+			);
 		});
 
 	for (const [r, c] of nextTo) {
+		const currentRecord = longestPaths[r]![c];
+		const newD = d + 1;
+		const newHs = hs
+			.filter((h) => !h.includes(`${r}-${c}`))
+			.concat(currentRecord?.d === d + 1 ? currentRecord!.hs : []);
 		longestPaths[r]![c] = {
-			d: d + 1,
-			h,
+			d: newD,
+			hs: newHs,
 		};
 	}
 
@@ -67,7 +75,7 @@ const mapToShow = map
 			.map((x, c) =>
 				r === 0 && c === startC
 					? "S"
-					: longestPaths[rows - 1]![endC]!.h.includes(`${r}-${c}`) ||
+					: longestPaths[rows - 1]![endC]!.hs![0]!.includes(`${r}-${c}`) ||
 					  (r === rows - 1 && c === endC)
 					? "O"
 					: x
