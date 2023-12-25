@@ -17,7 +17,8 @@ export const readLines = (metaUrl: string, fileName: string) => {
 	return readFile(metaUrl, fileName).split("\n");
 };
 
-export const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+export const sum = (arr: number[] | readonly number[]) =>
+	arr.reduce((a, b) => a + b, 0);
 
 export const prod = (arr: number[]) => arr.reduce((a, b) => a * b, 1);
 

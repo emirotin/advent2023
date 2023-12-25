@@ -1,19 +1,5 @@
-import { readLines, parseNums } from "../lib/index.js";
-
-const parseLine = (line: string) => {
-	const parts = line.split(" @ ");
-	const coords = parseNums(parts[0]!, ", ") as unknown as readonly [
-		number,
-		number,
-		number
-	];
-	const velocities = parseNums(parts[1]!, ", ") as unknown as readonly [
-		number,
-		number,
-		number
-	];
-	return { coords, velocities };
-};
+import { readLines } from "../lib/index.js";
+import { parseLine } from "./lib.js";
 
 const objs = readLines(import.meta.url, "input.txt")
 	.map((l) => l.trim())
