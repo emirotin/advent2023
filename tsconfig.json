@@ -14,5 +14,6 @@
 		"noEmit": true,
 		"lib": ["ES2023", "ESNext.Array"],
 		"sourceMap": true
-	}
+	},
+	"ts-node": { "esm": true }
 }
