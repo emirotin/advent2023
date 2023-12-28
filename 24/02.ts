@@ -189,25 +189,19 @@ for (const c of [0, 1, 2]) {
 			const runningBehind =
 				sign > 0 ? sameDir.slice(0, i + 1) : sameDir.slice(i + 1);
 
-			let minVel =
-				runningAhead.length > 0
-					? sign *
-					  (Math.max(...runningAhead.map((o) => o.velocities[c]! * sign)) + 1)
-					: -Infinity;
-			let maxVel =
-				runningBehind.length > 0
-					? sign *
-					  (Math.min(...runningBehind.map((o) => o.velocities[c]! * sign)) - 1)
-					: Infinity;
+			let minVelAbs =
+				Math.max(...runningAhead.map((o) => o.velocities[c]! * sign)) + 1;
+			let maxVelAbs =
+				Math.min(...runningBehind.map((o) => o.velocities[c]! * sign)) - 1;
+			let minVel = sign > 0 ? minVelAbs : -maxVelAbs;
+			let maxVel = sign > 0 ? maxVelAbs : -minVelAbs;
 			if (sign > 0) {
 				minVel = Math.max(minVel, 0);
 			} else {
 				maxVel = Math.min(maxVel, 0);
 			}
 
-			if (minVel > maxVel) {
-				continue;
-			}
+			if (minVel > maxVel) continue;
 
 			// console.log("coord between", leftBoundary, rightBoundary);
 			// console.log("velocity between", minVel, maxVel);
