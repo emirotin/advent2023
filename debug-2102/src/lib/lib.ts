@@ -1,4 +1,4 @@
-type Coords = readonly [number, number];
+export type Coords = readonly [number, number];
 
 type MapUnit = ('.' | '#' | number)[][];
 
@@ -42,8 +42,10 @@ export const getData = (input: string) => {
 	)
 		throw new Error('Meh, my algo is hard-wired to these assumptions');
 
-	return { map, size, start: start! };
+	return { map, size, start: start as Coords };
 };
+
+export type MapData = ReturnType<typeof getData>;
 
 export const neighbors = (map: MapUnit, size: number, [r, c]: Coords) => {
 	return [
@@ -55,6 +57,31 @@ export const neighbors = (map: MapUnit, size: number, [r, c]: Coords) => {
 };
 
 export const cloneMap = (map: MapUnit) => map.map((r) => r.slice());
+
+const multiplyArray = <T>(arr: T[], n: number) => {
+	const size = arr.length;
+	return Array.from({ length: size * n }, (_, i) => structuredClone(arr[i % size]));
+};
+
+export const multiplyMap = (map: MapUnit, n: number) =>
+	multiplyArray(
+		map.map((r) => multiplyArray(r, n)),
+		n
+	);
+
+export const sliceMap = (map: MapUnit, n: number) => {
+	const size = map.length;
+	const res = Array.from({ length: n }, () => Array.from({ length: n }));
+	const partSize = size / n;
+	for (let j = 0; j < n; j++) {
+		for (let i = 0; i < n; i++) {
+			res[j][i] = map
+				.slice(j * partSize, (j + 1) * partSize)
+				.map((r) => r.slice(i * partSize, (i + 1) * partSize));
+		}
+	}
+	return res as MapUnit[][];
+};
 
 export const calcPaths = (map: MapUnit, size: number, start: Coords) => {
 	map[start[0]]![start[1]] = 0;
