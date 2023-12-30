@@ -9,9 +9,9 @@
 			"request": "launch",
 			"name": "Launch Program",
 			"skipFiles": ["<node_internals>/**"],
-			"program": "${workspaceFolder}/24/02.ts",
+			"program": "${workspaceFolder}/21/02.ts",
 			"outFiles": ["${workspaceFolder}/**/*.js"],
-			"runtimeArgs": ["--import=tsimp/import", "--stack-size=16000"]
+			"runtimeArgs": ["--loader=ts-node/esm", "--stack-size=16000"]
 		}
 	]
 }

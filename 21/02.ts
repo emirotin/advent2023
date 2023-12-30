@@ -105,6 +105,8 @@ const calcPaths = (map: ("." | "#" | number)[][], start: Coords) => {
 	};
 };
 
+type PathInfo = ReturnType<typeof calcPaths>;
+
 const entryModels = Object.fromEntries(
 	entryPoints.map((code) => {
 		const mapCopy = clonedMap();
@@ -112,7 +114,7 @@ const entryModels = Object.fromEntries(
 
 		return [code, calcPaths(mapCopy, start)];
 	})
-);
+) as Record<EntryPoint, PathInfo>;
 
 const originalPaths = calcPaths(clonedMap(), start);
 
@@ -120,71 +122,55 @@ const TOTAL_STEPS = 26501365;
 
 let res = TOTAL_STEPS % 2 ? originalPaths.odds : originalPaths.evens;
 
-const travelLine = (
-	initialStepsLeft: number,
-	path: (typeof entryModels)[string]
-) => {
+const travelLine = (initialStepsLeft: number, entryPoint: EntryPoint) => {
+	const path = entryModels[entryPoint];
 	let stepsLeft = initialStepsLeft;
-	const n = Math.floor(stepsLeft / size);
+	const n = Math.floor((stepsLeft - path.maxPath) / size);
 	const oddNumsCount = Math.floor((n + 1) / 2);
 	res +=
 		(stepsLeft % 2 ? path.odds : path.evens) * oddNumsCount +
 		(stepsLeft % 2 ? path.evens : path.odds) * (n - oddNumsCount);
+
 	stepsLeft -= n * size;
-
-	res += path.numbers.filter(
-		(n) => n % 2 === stepsLeft % 2 && n <= stepsLeft
-	).length;
-};
-
-const travelNorthEast = () => {
-	const path = entryModels["sw"]!;
-	for (let i = 1; ; i++) {
-		let stepsLeft = TOTAL_STEPS - (size + 1) / 2 - (i > 1 ? (i - 1) * size : 0);
-		if (stepsLeft < 0) break;
-		travelLine(stepsLeft, path);
+	while (stepsLeft > 0) {
+		if (stepsLeft >= path.maxPath) {
+			res += stepsLeft % 2 ? path.odds : path.evens;
+		} else {
+			res += path.numbers.filter(
+				(n) => n % 2 === stepsLeft % 2 && n <= stepsLeft
+			).length;
+		}
+		stepsLeft -= size;
 	}
 };
 
-const travelNorthWest = () => {
-	const path = entryModels["se"]!;
-	for (let i = 1; ; i++) {
-		let stepsLeft = TOTAL_STEPS - (size + 1) / 2 - (i > 1 ? (i - 1) * size : 0);
-		if (stepsLeft < 0) break;
-		travelLine(stepsLeft, path);
-	}
-};
-
-const travelSouthEast = () => {
-	const path = entryModels["nw"]!;
-	for (let i = 1; ; i++) {
-		let stepsLeft = TOTAL_STEPS - (size + 1) / 2 - (i > 1 ? (i - 1) * size : 0);
-		if (stepsLeft < 0) break;
-		travelLine(stepsLeft, path);
-	}
-};
-
-const travelSouthWest = () => {
-	const path = entryModels["sw"]!;
-	for (let i = 1; ; i++) {
-		let stepsLeft = TOTAL_STEPS - (size + 1) / 2 - (i > 1 ? (i - 1) * size : 0);
-		if (stepsLeft < 0) break;
-		travelLine(stepsLeft, path);
+const travelQuadrant = (entryPoint: EntryPoint) => {
+	// steps to get to the first map instance, closest diagonal square
+	let stepsLeft = TOTAL_STEPS - (size + 1);
+	while (stepsLeft > 0) {
+		// traverse the vertical line starting from the current map
+		travelLine(stepsLeft, entryPoint);
+		// travel one map further "horizontally"
+		stepsLeft -= size;
 	}
 };
 
 // go east
-travelLine(TOTAL_STEPS - (size + 1) / 2, entryModels["w"]!);
+travelLine(TOTAL_STEPS - (size + 1) / 2, "w");
 // go west (yeah)
-travelLine(TOTAL_STEPS - (size + 1) / 2, entryModels["e"]!);
+travelLine(TOTAL_STEPS - (size + 1) / 2, "e");
 // go north
-travelLine(TOTAL_STEPS - (size + 1) / 2, entryModels["s"]!);
+travelLine(TOTAL_STEPS - (size + 1) / 2, "s");
 // go south
-travelLine(TOTAL_STEPS - (size + 1) / 2, entryModels["n"]!);
+travelLine(TOTAL_STEPS - (size + 1) / 2, "n");
 
-travelNorthEast();
-travelNorthWest();
-travelSouthEast();
-travelSouthWest();
+// travel north-east
+travelQuadrant("sw");
+// travel north-west
+travelQuadrant("se");
+// travel south-east
+travelQuadrant("nw");
+// travel south-west
+travelQuadrant("ne");
 
 console.log(res);
