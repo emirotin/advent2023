@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { type MapData, multiplyMap, calcPaths, sliceMap } from '$lib/lib';
+	import { type MapData, multiplyMap, calcPaths, sliceMap, sign } from '$lib/lib';
 
 	export let data: PageData;
 	const mapData: MapData = data.data;
@@ -19,7 +19,12 @@
 
 	const subMaps = sliceMap(pathInfo.map, MULT);
 
-	console.log(subMaps[0]);
+	let selected: {
+		mr: number;
+		mc: number;
+		r: number;
+		c: number;
+	} | null = null;
 </script>
 
 <div class="root">
@@ -31,14 +36,29 @@
 					{@const mc = i - (MULT - 1) / 2}
 					<div
 						class="mapUnit border border-3
-						{mc === 0 && mr === 0 ? 'border-secondary' : 'border-primary'}"
+						{mc === 0 && mr === 0 ? 'border-secondary background-primary' : 'border-primary'}"
 					>
-						{#each map as row}
+						{#each map as row, r}
 							<div class="mapUnitRow">
-								{#each row as cell}
+								{#each row as cell, c}
+									<!-- svelte-ignore a11y-click-events-have-key-events -->
+									<!-- svelte-ignore a11y-no-static-element-interactions -->
 									<div
 										class="mapUnitCell
-								{cell === '#' ? 'background-danger' : 'cellNumber'}"
+											{cell === '#' ? 'background-danger' : 'cellNumber'}
+											{selected &&
+										sign(mr) === sign(selected.mr) &&
+										sign(mc) === sign(selected.mc) &&
+										r === selected.r &&
+										c === selected.c
+											? 'background-success'
+											: ''}
+										"
+										on:click={cell === '#'
+											? undefined
+											: () => {
+													selected = { mr, mc, r, c };
+												}}
 									>
 										{cell}
 									</div>
@@ -91,6 +111,7 @@
 		justify-content: center;
 		align-items: center;
 		flex-wrap: initial;
+		cursor: pointer;
 	}
 	.cellNumber {
 		font-size: 0.5em;

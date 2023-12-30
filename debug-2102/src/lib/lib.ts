@@ -114,3 +114,5 @@ export const calcPaths = (map: MapUnit, size: number, start: Coords) => {
 };
 
 export type PathInfo = ReturnType<typeof calcPaths>;
+
+export const sign = (x: number) => (x > 0 ? 1 : x < 0 ? -1 : 0);
