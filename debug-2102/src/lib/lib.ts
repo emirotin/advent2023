@@ -75,7 +75,7 @@ export const sliceMap = (map: MapUnit, n: number) => {
 	const partSize = size / n;
 	for (let j = 0; j < n; j++) {
 		for (let i = 0; i < n; i++) {
-			res[j][i] = map
+			res[j]![i] = map
 				.slice(j * partSize, (j + 1) * partSize)
 				.map((r) => r.slice(i * partSize, (i + 1) * partSize));
 		}
@@ -100,7 +100,7 @@ export const calcPaths = (map: MapUnit, size: number, start: Coords) => {
 	const numbers = map.flatMap((r) => r).filter((n) => typeof n === 'number') as number[];
 	const odds = numbers.filter((n) => n % 2 === 1).length;
 	const evens = numbers.filter((n) => n % 2 === 0).length;
-	const minPath = Math.max(...numbers);
+	const minPath = Math.min(...numbers);
 	const maxPath = Math.max(...numbers);
 
 	return {

@@ -2,6 +2,8 @@ import { readLines } from "../lib/index.js";
 
 type Coords = readonly [number, number];
 
+type MapUnit = ("." | "#" | number)[][];
+
 const getData = () => {
 	let start: Coords | null = null;
 
@@ -46,9 +48,7 @@ const getData = () => {
 	return { map, size, start: start! };
 };
 
-const { map, size, start } = getData();
-
-const neighbors = ([r, c]: Coords) => {
+const neighbors = (map: MapUnit, size: number, [r, c]: Coords) => {
 	return [
 		[r - 1, c] as const,
 		[r + 1, c] as const,
@@ -59,29 +59,40 @@ const neighbors = ([r, c]: Coords) => {
 	);
 };
 
-const clonedMap = () => map.map((r) => r.slice() as ("." | "#" | number)[]);
-
-const entryPoints = ["nw", "n", "ne", "e", "se", "s", "sw", "w"] as const;
-type EntryPoint = (typeof entryPoints)[number];
-
-const entryPointCoords: Record<EntryPoint, [number, number]> = {
-	nw: [0, 0],
-	n: [0, (size - 1) / 2],
-	ne: [0, size - 1],
-	e: [(size - 1) / 2, size - 1],
-	se: [size - 1, size - 1],
-	s: [size - 1, (size - 1) / 2],
-	sw: [size - 1, 0],
-	w: [(size - 1) / 2, 0],
+const multiplyArray = <T>(arr: T[], n: number): T[] => {
+	const size = arr.length;
+	return Array.from({ length: size * n }, (_, i) =>
+		structuredClone(arr[i % size]!)
+	);
 };
 
-const calcPaths = (map: ("." | "#" | number)[][], start: Coords) => {
+export const multiplyMap = (map: MapUnit, n: number) =>
+	multiplyArray(
+		map.map((r) => multiplyArray(r, n)),
+		n
+	);
+
+export const sliceMap = (map: MapUnit, n: number) => {
+	const size = map.length;
+	const res = Array.from({ length: n }, () => Array.from({ length: n }));
+	const partSize = size / n;
+	for (let j = 0; j < n; j++) {
+		for (let i = 0; i < n; i++) {
+			res[j]![i] = map
+				.slice(j * partSize, (j + 1) * partSize)
+				.map((r) => r.slice(i * partSize, (i + 1) * partSize));
+		}
+	}
+	return res as MapUnit[][];
+};
+
+export const calcPaths = (map: MapUnit, size: number, start: Coords) => {
 	map[start[0]]![start[1]] = 0;
 	const checkNext = [start];
 	let coords: Coords | undefined;
 	while ((coords = checkNext.shift())) {
 		const n = map[coords[0]]![coords[1]] as number;
-		for (const [r, c] of neighbors(coords)) {
+		for (const [r, c] of neighbors(map, size, coords)) {
 			if (map[r]![c] === ".") {
 				map[r]![c] = n + 1;
 				checkNext.push([r, c]);
@@ -89,54 +100,63 @@ const calcPaths = (map: ("." | "#" | number)[][], start: Coords) => {
 		}
 	}
 
+	return map;
+};
+
+const calcStats = (map: MapUnit) => {
 	const numbers = map
 		.flatMap((r) => r)
 		.filter((n) => typeof n === "number") as number[];
 	const odds = numbers.filter((n) => n % 2 === 1).length;
 	const evens = numbers.filter((n) => n % 2 === 0).length;
+	const minPath = Math.min(...numbers);
 	const maxPath = Math.max(...numbers);
 
 	return {
-		map: map as ("#" | number)[][],
 		numbers,
 		odds,
 		evens,
+		minPath,
 		maxPath,
 	};
 };
 
-type PathInfo = ReturnType<typeof calcPaths>;
-
-const entryModels = Object.fromEntries(
-	entryPoints.map((code) => {
-		const mapCopy = clonedMap();
-		const start = entryPointCoords[code];
-
-		return [code, calcPaths(mapCopy, start)];
-	})
-) as Record<EntryPoint, PathInfo>;
-
-const originalPaths = calcPaths(clonedMap(), start);
+type Stats = ReturnType<typeof calcStats>;
 
 const TOTAL_STEPS = 26501365;
 
-let res = TOTAL_STEPS % 2 ? originalPaths.odds : originalPaths.evens;
+const MULT = 3;
+const { map: originalMap, size, start: originalStart } = getData();
+const start = [
+	originalStart[0] + ((MULT - 1) / 2) * size,
+	originalStart[1] + ((MULT - 1) / 2) * size,
+] as const;
 
-const travelLine = (initialStepsLeft: number, entryPoint: EntryPoint) => {
-	const path = entryModels[entryPoint];
+const extendedMap = multiplyMap(originalMap as MapUnit, MULT);
+const extendedMapWithPaths = calcPaths(extendedMap, size * MULT, start);
+const slicedMap = sliceMap(extendedMapWithPaths, MULT);
+const stats = slicedMap.map((r) => r.map(calcStats));
+
+let res = TOTAL_STEPS % 2 ? stats[1]![1]!.odds : stats[1]![1]!.evens;
+
+const travelLine = (initialStepsLeft: number, stats: Stats) => {
 	let stepsLeft = initialStepsLeft;
-	const n = Math.floor((stepsLeft - path.maxPath) / size);
-	const oddNumsCount = Math.floor((n + 1) / 2);
-	res +=
-		(stepsLeft % 2 ? path.odds : path.evens) * oddNumsCount +
-		(stepsLeft % 2 ? path.evens : path.odds) * (n - oddNumsCount);
 
-	stepsLeft -= n * size;
-	while (stepsLeft > 0) {
-		if (stepsLeft >= path.maxPath) {
-			res += stepsLeft % 2 ? path.odds : path.evens;
+	if (stepsLeft > stats.maxPath) {
+		const n = Math.floor((stepsLeft - stats.maxPath) / size);
+		const oddNumsCount = Math.floor((n + 1) / 2);
+		res +=
+			(stepsLeft % 2 ? stats.odds : stats.evens) * oddNumsCount +
+			(stepsLeft % 2 ? stats.evens : stats.odds) * (n - oddNumsCount);
+
+		stepsLeft -= n * size;
+	}
+
+	while (stepsLeft >= stats.minPath) {
+		if (stepsLeft >= stats.maxPath) {
+			res += stepsLeft % 2 ? stats.odds : stats.evens;
 		} else {
-			res += path.numbers.filter(
+			res += stats.numbers.filter(
 				(n) => n % 2 === stepsLeft % 2 && n <= stepsLeft
 			).length;
 		}
@@ -144,33 +164,32 @@ const travelLine = (initialStepsLeft: number, entryPoint: EntryPoint) => {
 	}
 };
 
-const travelQuadrant = (entryPoint: EntryPoint) => {
-	// steps to get to the first map instance, closest diagonal square
-	let stepsLeft = TOTAL_STEPS - (size + 1);
+const travelQuadrant = (stats: Stats) => {
+	let stepsLeft = TOTAL_STEPS;
 	while (stepsLeft > 0) {
 		// traverse the vertical line starting from the current map
-		travelLine(stepsLeft, entryPoint);
-		// travel one map further "horizontally"
+		travelLine(stepsLeft, stats);
+		// travel one map further horizontally
 		stepsLeft -= size;
 	}
 };
 
+// go west (this is what we gonna do)
+travelLine(TOTAL_STEPS, stats[1]![0]!);
 // go east
-travelLine(TOTAL_STEPS - (size + 1) / 2, "w");
-// go west (yeah)
-travelLine(TOTAL_STEPS - (size + 1) / 2, "e");
+travelLine(TOTAL_STEPS, stats[1]![2]!);
 // go north
-travelLine(TOTAL_STEPS - (size + 1) / 2, "s");
+travelLine(TOTAL_STEPS, stats[0]![1]!);
 // go south
-travelLine(TOTAL_STEPS - (size + 1) / 2, "n");
+travelLine(TOTAL_STEPS, stats[2]![1]!);
 
 // travel north-east
-travelQuadrant("sw");
+travelQuadrant(stats[0]![2]!);
 // travel north-west
-travelQuadrant("se");
+travelQuadrant(stats[0]![0]!);
 // travel south-east
-travelQuadrant("nw");
+travelQuadrant(stats[2]![0]!);
 // travel south-west
-travelQuadrant("ne");
+travelQuadrant(stats[2]![2]!);
 
 console.log(res);
