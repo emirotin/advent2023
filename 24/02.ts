@@ -1,5 +1,11 @@
 import { readLines, sum } from "../lib/index.js";
-import { parseLine, type Vector, type Obj } from "./lib.js";
+import {
+	parseLine,
+	type Vector,
+	type Obj,
+	solve,
+	type LinVector,
+} from "./lib.js";
 
 const pow = (v: Vector) => sum(v.map(Math.abs));
 
@@ -37,7 +43,7 @@ const objs = readLines(import.meta.url, "input.txt")
 // 	return Math.max(a, b);
 // };
 
-// const isInt = (n: number) => n === ~~n;
+const isInt = (n: number) => n === ~~n;
 
 // const allDivisors = (n: number) => {
 // 	const res = [];
@@ -162,7 +168,9 @@ for (const c of [0, 1, 2]) {
 			.filter((o) => o.velocities[c]! * sign > 0)
 			.sort((a, b) => a.coords[c]! - b.coords[c]!);
 		const oppositeDirBoundary =
-			sign > 0
+			oppositeDir.length === 0
+				? undefined
+				: sign > 0
 				? oppositeDir[0]!.coords[c]!
 				: oppositeDir[oppositeDir.length - 1]!.coords[c]!;
 
@@ -171,16 +179,26 @@ for (const c of [0, 1, 2]) {
 			let rightBoundary =
 				i === sameDir.length - 1 ? Infinity : sameDir[i + 1]!.coords[c]!;
 			if (
-				(sign > 0 && leftBoundary >= oppositeDirBoundary) ||
-				(sign < 0 && rightBoundary <= oppositeDirBoundary)
+				(sign > 0 &&
+					oppositeDirBoundary !== undefined &&
+					leftBoundary >= oppositeDirBoundary) ||
+				(sign < 0 &&
+					oppositeDirBoundary !== undefined &&
+					rightBoundary <= oppositeDirBoundary)
 			) {
 				continue;
 			}
 
 			leftBoundary =
-				Math.max(leftBoundary, sign > 0 ? -Infinity : oppositeDirBoundary) + 1;
+				Math.max(
+					leftBoundary,
+					sign > 0 ? -Infinity : oppositeDirBoundary ?? -Infinity
+				) + 1;
 			rightBoundary =
-				Math.min(rightBoundary, sign < 0 ? Infinity : oppositeDirBoundary) - 1;
+				Math.min(
+					rightBoundary,
+					sign < 0 ? Infinity : oppositeDirBoundary ?? Infinity
+				) - 1;
 
 			if (leftBoundary > rightBoundary) continue;
 
@@ -219,4 +237,75 @@ for (const c of [0, 1, 2]) {
 	}
 }
 
-console.dir(options, { depth: Infinity });
+const allFinite = (ns: number[]) => ns.every(Number.isFinite);
+
+const isFinite = (opt: Option) =>
+	allFinite([opt.min, opt.max, opt.minVel, opt.maxVel]);
+
+const isPos = (n: number) => n > 0;
+
+const N = objs.length;
+
+console.log(options);
+
+for (const optX of options[0]!) {
+	if (!isFinite(optX)) continue;
+
+	for (const optY of options[1]!) {
+		if (!isFinite(optY)) continue;
+
+		for (const optZ of options[2]!) {
+			if (!isFinite(optZ)) continue;
+
+			for (let vx = optX.minVel; vx <= optX.maxVel; vx++) {
+				for (let vy = optY.minVel; vy <= optY.maxVel; vy++) {
+					for (let vz = optZ.minVel; vz <= optZ.maxVel; vz++) {
+						const a = Array.from({ length: N * 3 }, () =>
+							Array.from({ length: N * 3 }, () => 0)
+						);
+						const b = Array.from({ length: N * 3 }, () => 0);
+
+						for (let i = 0; i < N; i++) {
+							// x
+							a[i * 3]![0] = 1;
+							// y
+							a[i * 3 + 1]![1] = 1;
+							// z
+							a[i * 3 + 2]![2] = 1;
+							// t_i
+							a[i * 3]![3 + i] = vx - objs[i]!.velocities[0];
+							a[i * 3 + 1]![3 + i] = vy - objs[i]!.velocities[1];
+							a[i * 3 + 2]![3 + i] = vz - objs[i]!.velocities[2];
+							// b
+							b[i * 3] = objs[i]!.coords[0];
+							b[i * 3 + 1] = objs[i]!.coords[1];
+							b[i * 3 + 2] = objs[i]!.coords[2];
+						}
+
+						try {
+							const sol = solve(a, b) as LinVector;
+
+							if (
+								sol.every(isInt) &&
+								sol.slice(3).every(isPos) &&
+								sol[0]! >= optX.min &&
+								sol[0]! <= optX.max &&
+								sol[1]! >= optY.min &&
+								sol[1]! <= optY.max &&
+								sol[2]! >= optZ.min &&
+								sol[2]! <= optZ.max
+							) {
+								console.log(sum(sol.slice(0, 3)));
+								process.exit(0);
+							} else {
+								console.log("Not consistent");
+							}
+						} catch (err: unknown) {
+							console.log((err as Error).message);
+						}
+					}
+				}
+			}
+		}
+	}
+}

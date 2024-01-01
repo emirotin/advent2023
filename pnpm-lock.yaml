@@ -8,6 +8,9 @@ dependencies:
   '@types/lodash-es':
     specifier: ^4.17.12
     version: 4.17.12
+  linear-solve:
+    specifier: ^1.2.1
+    version: 1.2.1
   lodash-es:
     specifier: ^4.17.21
     version: 4.17.21
@@ -237,6 +240,10 @@ packages:
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
     dev: true
+
+  /linear-solve@1.2.1:
+    resolution: {integrity: sha512-YysEUwkRRtxvjJto9kArBJdH/NCnakI8YOrSDD8yK1EV3+t8UjNzqdCQSU+FaNtYLTCBdlI7fwV6Fbn1EEyLew==}
+    dev: false
 
   /lodash-es@4.17.21:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
