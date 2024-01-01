@@ -80,9 +80,9 @@ function App() {
 									points={[
 										o.coords,
 										[
-											o.coords[0] + o.velocities[0],
-											o.coords[1] + o.velocities[1],
-											o.coords[2] + o.velocities[2],
+											o.coords[0] + (o.velocities[0] * DT) / 100,
+											o.coords[1] + (o.velocities[1] * DT) / 100,
+											o.coords[2] + (o.velocities[2] * DT) / 100,
 										],
 									]}
 									color="red"
