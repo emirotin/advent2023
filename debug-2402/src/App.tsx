@@ -63,19 +63,32 @@ function App() {
 				<Bounds fit clip observe margin={1.2}>
 					<SelectToZoom>
 						{objs.map((o, i) => (
-							<Line
-								key={i}
-								points={[
-									o.coords,
-									[
-										o.coords[0] + o.velocities[0] * DT,
-										o.coords[1] + o.velocities[1] * DT,
-										o.coords[2] + o.velocities[2] * DT,
-									],
-								]}
-								color="blue"
-								lineWidth={5}
-							/>
+							<React.Fragment key={i}>
+								<Line
+									points={[
+										o.coords,
+										[
+											o.coords[0] + o.velocities[0] * DT,
+											o.coords[1] + o.velocities[1] * DT,
+											o.coords[2] + o.velocities[2] * DT,
+										],
+									]}
+									color="blue"
+									lineWidth={4}
+								/>
+								<Line
+									points={[
+										o.coords,
+										[
+											o.coords[0] + o.velocities[0],
+											o.coords[1] + o.velocities[1],
+											o.coords[2] + o.velocities[2],
+										],
+									]}
+									color="red"
+									lineWidth={8}
+								/>
+							</React.Fragment>
 						))}
 					</SelectToZoom>
 				</Bounds>
@@ -89,11 +102,7 @@ function App() {
 					far={50}
 				/>
 			</Suspense>
-			<OrbitControls
-				makeDefault
-				minPolarAngle={0}
-				maxPolarAngle={Math.PI / 1.75}
-			/>
+			<OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI} />
 		</Canvas>
 	);
 }
