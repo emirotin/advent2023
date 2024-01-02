@@ -23,6 +23,7 @@
 	},
 	"dependencies": {
 		"@types/lodash-es": "^4.17.12",
+		"decimal.js": "^10.4.3",
 		"linear-solve": "^1.2.1",
 		"lodash-es": "^4.17.21"
 	}

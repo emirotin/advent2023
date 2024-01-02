@@ -1,6 +1,9 @@
 import { parseNums } from "../lib/index.js";
+import { Decimal } from "decimal.js";
 
-export type Vector = [number, number, number];
+Decimal.set({ precision: 40 });
+
+export type Vector = [Decimal, Decimal, Decimal];
 
 export type Obj = {
 	coords: Vector;
@@ -10,8 +13,12 @@ export type Obj = {
 
 export const parseLine = (line: string, i: number): Obj => {
 	const parts = line.split(" @ ");
-	const coords = parseNums(parts[0]!, ", ") as unknown as Vector;
-	const velocities = parseNums(parts[1]!, ", ") as unknown as Vector;
+	const coords = parseNums(parts[0]!, ", ").map(
+		(n) => new Decimal(n)
+	) as unknown as Vector;
+	const velocities = parseNums(parts[1]!, ", ").map(
+		(n) => new Decimal(n)
+	) as unknown as Vector;
 	return { coords, velocities, index: i };
 };
 
@@ -20,8 +27,8 @@ export const parseLine = (line: string, i: number): Obj => {
  * Adapted from https://github.com/lovasoa/linear-solve/blob/master/gauss-jordan.js
  */
 
-export type LinMatrix = number[][];
-export type LinVector = number[];
+export type LinMatrix = Decimal[][];
+export type LinVector = Decimal[];
 
 /**
  * Used internally to solve systems
@@ -45,9 +52,9 @@ class Mat {
 		}
 
 		if (mirror) {
-			if (typeof mirror[0] === "number") {
+			if (Decimal.isDecimal(mirror[0])) {
 				for (let i = 0; i < mirror.length; i++) {
-					mirror[i] = [mirror[i] as number];
+					mirror[i] = [mirror[i] as Decimal];
 				}
 			}
 			this.mirror = new Mat(mirror as LinMatrix);
@@ -65,25 +72,25 @@ class Mat {
 	}
 
 	/**
-	 * Multiply line number i by l
+	 * Divide line number i by l
 	 */
-	multLine(i: number, l: number) {
-		if (this.mirror) this.mirror.multLine(i, l);
+	divLine(i: number, l: Decimal) {
+		if (this.mirror) this.mirror.divLine(i, l);
 		let line = this.data[i]!;
 		for (let k = line.length - 1; k >= 0; k--) {
-			line[k] *= l;
+			line[k] = line[k]!.div(l);
 		}
 	}
 
 	/**
 	 * Add line number j multiplied by l to line number i
 	 */
-	addMul(i: number, j: number, l: number) {
+	addMul(i: number, j: number, l: Decimal) {
 		if (this.mirror) this.mirror.addMul(i, j, l);
 		let lineI = this.data[i]!,
 			lineJ = this.data[j]!;
 		for (let k = lineI.length - 1; k >= 0; k--) {
-			lineI[k] = lineI[k]! + l * lineJ[k]!;
+			lineI[k] = lineI[k]!.add(l.mul(lineJ[k]!));
 		}
 	}
 
@@ -92,7 +99,7 @@ class Mat {
 	 */
 	hasNullLine(i: number) {
 		for (let j = 0; j < this.data[i]!.length; j++) {
-			if (this.data[i]![j] !== 0) {
+			if (this.data[i]![j]!.eq(0)) {
 				return false;
 			}
 		}
@@ -109,25 +116,25 @@ class Mat {
 
 		for (let j = 0; j < columns; j++) {
 			// Find the line on which there is the maximum value of column j
-			let maxValue = 0,
+			let maxValue = new Decimal(0),
 				maxLine = 0;
 			for (let k = pivot; k < lines; k++) {
 				let val = this.data[k]![j]!;
-				if (Math.abs(val) > Math.abs(maxValue)) {
+				if (val.abs().greaterThan(maxValue.abs())) {
 					maxLine = k;
 					maxValue = val;
 				}
 			}
-			if (maxValue === 0) {
+			if (maxValue.eq(0)) {
 				// The matrix is not invertible. The system may still have solutions.
 				nullLines.push(pivot);
 			} else {
 				// The value of the pivot is maxValue
-				this.multLine(maxLine, 1 / maxValue);
+				this.divLine(maxLine, maxValue);
 				this.swap(maxLine, pivot);
 				for (let i = 0; i < lines; i++) {
 					if (i !== pivot) {
-						this.addMul(i, pivot, -this.data[i]![j]!);
+						this.addMul(i, pivot, this.data[i]![j]!.negated());
 					}
 				}
 			}
